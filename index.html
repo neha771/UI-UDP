@@ -52,6 +52,163 @@
   .nav-btn:disabled { opacity: 0.25; cursor: default; }
   .device-label { animation: fadeIn 0.3s ease; }
   .screen-area { animation: slideUp 0.3s ease; }
+
+  /* ══ ENHANCED VISUAL SYSTEM ══ */
+  :root {
+    --bg: #04050d;
+    --surface: #080a17;
+    --surface2: #0d1022;
+    --border: rgba(255,255,255,0.065);
+    --border2: rgba(255,255,255,0.13);
+    --text1: rgba(255,255,255,0.94);
+    --text2: rgba(255,255,255,0.58);
+    --text3: rgba(255,255,255,0.28);
+    --blue: #4f8fff;
+    --green: #1aed8a;
+    --amber: #f5a62a;
+    --red: #ff4f4f;
+    --purple: #9d6fff;
+    --pink: #ff6b8a;
+    --gold: #ffd166;
+  }
+  html, body { 
+    height: 100%; background: var(--bg); color: var(--text1); 
+    font-family: 'DM Sans', sans-serif; overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Improved HUD strip look */
+  .hud-strip-enhanced {
+    background: rgba(4,5,13,0.93) !important;
+    backdrop-filter: blur(20px) !important;
+    box-shadow: 0 -1px 0 rgba(255,255,255,0.06), 0 -8px 32px rgba(0,0,0,0.6) !important;
+  }
+
+  /* Richer card surfaces */
+  .card-enhanced {
+    background: rgba(8,10,22,0.94) !important;
+    backdrop-filter: blur(24px) !important;
+  }
+
+  /* Screen devices */
+  .device-frame {
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 24px 64px rgba(0,0,0,0.7) !important;
+  }
+
+  /* Glowing alert borders */
+  @keyframes glowPulse {
+    0%,100% { box-shadow: 0 0 0 0 currentColor; }
+    50% { box-shadow: 0 0 20px 2px currentColor; }
+  }
+  @keyframes wfAnim {
+    0%,100% { transform: scaleY(0.3); }
+    50% { transform: scaleY(1); }
+  }
+  @keyframes shieldFloat {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+  @keyframes scanLine {
+    from { transform: translateY(-100%); }
+    to   { transform: translateY(400%); }
+  }
+  @keyframes countdownBar {
+    from { width: 100%; }
+    to   { width: 0%; }
+  }
+  @keyframes personaFade {
+    0% { opacity:0; transform: translateX(8px); }
+    15% { opacity:1; transform: translateX(0); }
+    80% { opacity:1; }
+    100% { opacity:0; }
+  }
+  @keyframes vruBreathe {
+    0%,100% { opacity:0.7; transform:scale(1); }
+    50% { opacity:1; transform:scale(1.1); }
+  }
+  @keyframes nightGlare {
+    0%,100% { opacity:0.6; }
+    50% { opacity:1; }
+  }
+  @keyframes rippleOut {
+    0% { transform:translate(-50%,-50%) scale(1); opacity:0.5; }
+    100% { transform:translate(-50%,-50%) scale(2.5); opacity:0; }
+  }
+
+  /* ══ VOICE TOAST ══ */
+  #voice-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: rgba(8,10,22,0.96);
+    border: 1px solid rgba(26,237,138,0.4);
+    border-radius: 12px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 9999;
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s ease;
+    opacity: 0;
+    pointer-events: none;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(26,237,138,0.15);
+    min-width: 280px;
+    max-width: 480px;
+  }
+  #voice-toast.visible {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  #voice-toast .wf-container {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  #voice-toast .wf-bar {
+    width: 3px;
+    border-radius: 2px;
+    background: var(--green);
+    animation: wfAnim 0.45s ease-in-out infinite;
+  }
+  #voice-toast .toast-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 9px;
+    color: var(--green);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  #voice-toast .toast-text {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: rgba(255,255,255,0.88);
+    line-height: 1.4;
+    font-style: italic;
+  }
+  #voice-speaker-btn {
+    position: fixed;
+    top: 52px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.4);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: all 0.2s;
+  }
+  #voice-speaker-btn.muted { color: rgba(255,79,79,0.7); border-color: rgba(255,79,79,0.3); }
+  #voice-speaker-btn:hover { background: rgba(255,255,255,0.1); }
+
 </style>
 </head>
 <body>
@@ -64,11 +221,17 @@ const { useState, useEffect, useRef } = React;
 
 /* ─── Map SVG ─────────────────────────────────────────── */
 function DarkMap({ showRoute = true, nightMode = false }) {
-  const bg = nightMode ? '#060d18' : '#0d1520';
+  const bg = nightMode ? '#03080f' : '#08101e';
   return (
     <svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg"
       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
       <rect width="480" height="300" fill={bg} />
+      <rect width="480" height="300" fill="url(#gridPat)" opacity="0.4" />
+      <defs>
+        <pattern id="gridPat" width="24" height="24" patternUnits="userSpaceOnUse">
+          <path d="M 24 0 L 0 0 0 24" fill="none" stroke="rgba(255,255,255,0.035)" strokeWidth="0.5"/>
+        </pattern>
+      </defs>
       {/* city grid */}
       {[...Array(9)].map((_,i) => <line key={`h${i}`} x1="0" y1={i*36} x2="480" y2={i*36} stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>)}
       {[...Array(14)].map((_,i) => <line key={`v${i}`} x1={i*36} y1="0" x2={i*36} y2="300" stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>)}
@@ -110,7 +273,8 @@ function RoadScene({ alertLevel, children }) {
     : 'rgba(0,0,0,0)';
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, #050910 0%, #0c1220 55%, #141c30 100%)' }}/>
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, #030608 0%, #080f1c 55%, #0d1528 100%)' }}/>
+      <div style={{ position:'absolute',inset:0,backgroundImage:'repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,0.012) 3px,rgba(255,255,255,0.012) 4px)',pointerEvents:'none',zIndex:1 }}/>
       <div style={{ position: 'absolute', inset: 0, background: skyTint, transition: 'background 0.8s' }}/>
       {/* road surface */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '45%', background: 'linear-gradient(to bottom, #0d1018, #121820)', clipPath: 'polygon(28% 0%, 72% 0%, 100% 100%, 0% 100%)' }}/>
@@ -138,8 +302,8 @@ function TimerBar({ duration = 8, color = '#1aed8a', auto = true }) {
     return () => clearInterval(iv);
   }, [duration, auto]);
   return (
-    <div style={{ height: '2px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden', marginTop: '5px' }}>
-      <div style={{ height: '100%', width: `${pct}%`, background: color, transition: 'width 0.1s linear', borderRadius: '2px' }}/>
+    <div style={{ height: '2px', borderRadius: '2px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden', marginTop: '5px' }}>
+      <div style={{ height: '100%', width: `${pct}%`, background: color, transition: 'width 0.1s linear', borderRadius: '2px', boxShadow: `0 0 6px ${color}` }}/>
     </div>
   );
 }
@@ -178,6 +342,19 @@ function PulseDot({ color = '#1aed8a', size = 8 }) {
 ═══════════════════════════════════════════════════════ */
 function HUDScreen({ screen }) {
   const alertLevel = screen.alertLevel;
+  // Auto-announce critical states via voice
+  React.useEffect(() => {
+    if(!window.VOICE) return;
+    const voiceMap = {
+      'emergency': 'Help notified. Stay calm. Location shared.',
+      'checkin': 'Still okay? Press left button to confirm.',
+      'safety-active': 'Safety net active. Your contact has been notified.',
+      'warning': screen.rightText && screen.rightText.includes('Pedestrian') ? 'Pedestrian crossing. Slow down.' : '',
+      'presence': 'Car behind. Light is green. Move forward.',
+    };
+    const txt = voiceMap[alertLevel] || '';
+    if(txt) setTimeout(() => window.VOICE.speak(txt, alertLevel==='emergency'?'#ff4f4f':alertLevel==='checkin'?'#f5a62a':'#1aed8a'), 500);
+  }, [alertLevel, screen.title]);
   const hudBorderColor =
     alertLevel === 'emergency'     ? 'rgba(255,69,69,0.9)'   :
     alertLevel === 'warning'       ? 'rgba(245,166,35,0.75)' :
@@ -209,19 +386,24 @@ function HUDScreen({ screen }) {
         <RoadScene alertLevel={alertLevel}>
           {screen.personaLabel && (
             <div style={{
-              position: 'absolute', top: '38%', left: '56%',
-              background: 'rgba(255,255,255,0.07)', backdropFilter: 'blur(6px)',
-              border: '1px solid rgba(255,255,255,0.18)', borderRadius: '4px',
-              padding: '3px 8px', fontFamily: 'Space Grotesk',
-              fontSize: '11px', color: 'rgba(255,255,255,0.72)', letterSpacing: '0.3px',
-            }}>{screen.personaLabel}</div>
+              position: 'absolute', top: '36%', left: '54%',
+              background: 'rgba(10,14,32,0.88)', backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(157,111,255,0.5)', borderRadius: '5px',
+              padding: '4px 10px', fontFamily: 'Space Grotesk',
+              fontSize: '11px', fontWeight: '600', color: 'rgba(200,180,255,0.92)', letterSpacing: '0.3px',
+              animation: 'personaFade 6s ease forwards',
+              boxShadow: '0 2px 12px rgba(157,111,255,0.25)',
+            }}>
+              <span style={{ fontSize:10, marginRight:4 }}>🛵</span>
+              {screen.personaLabel}
+            </div>
           )}
           {/* Pedestrian silhouette for VRU */}
           {alertLevel === 'silent' && (
-            <div style={{ position: 'absolute', top: '28%', left: '48%', fontSize: '22px', opacity: 0.5, filter: 'hue-rotate(0deg) saturate(0)' }}>🚶</div>
+            <div style={{ position: 'absolute', top: '26%', left: '48%', fontSize: '22px', opacity: 0.55, filter: 'saturate(0) brightness(1.2)', border:'1px solid rgba(255,220,50,0.4)', borderRadius:'4px', padding:'2px 4px' }}>🚶</div>
           )}
           {alertLevel === 'warning' && (
-            <div style={{ position: 'absolute', top: '26%', left: '48%', fontSize: '26px', opacity: 0.7, animation: 'pulseScale 1.5s ease-in-out infinite' }}>🚶</div>
+            <div style={{ position: 'absolute', top: '24%', left: '47%', fontSize: '28px', opacity: 0.9, animation: 'vruBreathe 1s ease-in-out infinite', filter:'drop-shadow(0 0 8px rgba(255,79,79,0.8))' }}>🚶</div>
           )}
           {alertLevel === 'orange' && (
             <div style={{ position: 'absolute', top: '38%', left: '47%', fontSize: '20px', opacity: 0.7 }}>🐕</div>
@@ -243,14 +425,14 @@ function HUDScreen({ screen }) {
 
       {/* HUD band */}
       <div style={{
-        background: 'rgba(7,10,22,0.88)', backdropFilter: 'blur(18px)',
+        background: 'rgba(4,5,13,0.93)', backdropFilter: 'blur(22px)',
         borderTop: `2px solid ${hudBorderColor}`,
-        border: `1px solid ${hudBorderColor}`,
+        border: `1px solid ${hudBorderColor.replace('0.9','0.5').replace('0.75','0.4')}`,
         borderTop: `2px solid ${hudBorderColor}`,
         padding: '11px 18px 13px',
         display: 'grid', gridTemplateColumns: '90px 1fr 130px',
         alignItems: 'center', gap: '8px', minHeight: '76px',
-        boxShadow: `0 -6px 30px ${hudBorderColor.replace('0.', '0.08').replace(',1)', ',0.12)')}`,
+        boxShadow: `0 -8px 36px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)`,
       }}>
         {/* Speed */}
         <div>
@@ -357,7 +539,7 @@ function NotificationCard({ screen }) {
         </div>
       )}
       <div style={{ display:'flex', gap:'7px' }}>
-        <button style={{ flex:2, padding:'8px', borderRadius:'6px', background:'#4080ff', border:'none', color:'#fff', fontFamily:'Space Grotesk', fontWeight:'600', fontSize:'11px', cursor:'pointer' }}>Send</button>
+        <button onClick={() => window.VOICE && window.VOICE.speak('Message sent. Running 11 minutes late, see you soon.','#4f8fff')} style={{ flex:2, padding:'8px', borderRadius:'6px', background:'#4f8fff', border:'none', color:'#000', fontFamily:'Space Grotesk', fontWeight:'700', fontSize:'11px', cursor:'pointer', boxShadow:'0 2px 10px rgba(79,143,255,0.4)' }}>Send</button>
         <button style={{ flex:1, padding:'8px', borderRadius:'6px', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', color:'rgba(255,255,255,0.5)', fontFamily:'Space Grotesk', fontSize:'11px', cursor:'pointer' }}>Dismiss</button>
       </div>
     </div>
@@ -470,11 +652,20 @@ function CallLayout() {
 }
 
 function OnboardingLayout() {
-  const qs = ['How many people usually travel together?', 'Does anyone have temperature preferences?', 'Do you travel with children?'];
+  const qs = ["What type of food do you prefer most of the time?", "What do you enjoy exploring on trips?", "Does anyone have temperature preferences?", "How many people usually travel together?"];
   const [qi, setQi] = useState(0);
-  useEffect(() => { const t = setInterval(() => setQi(q => (q+1)%qs.length), 4500); return () => clearInterval(t); }, []);
+  useEffect(() => {
+    const t = setInterval(() => setQi(q => (q+1)%qs.length), 4500);
+    return () => clearInterval(t);
+  }, []);
+  // Voice the current question
+  useEffect(() => {
+    if(window.VOICE && qi === 0) {
+      setTimeout(() => window.VOICE.speak(qs[0], '#4db8ff'), 300);
+    }
+  }, [qi]);
   return (
-    <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'18px', background:'rgba(10,13,28,0.97)' }}>
+    <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'18px', background:'linear-gradient(160deg,#040611,#07091a)' }}>
       <div style={{ display:'flex', gap:'6px', marginBottom:'20px' }}>
         {Array(8).fill(0).map((_,i) => (
           <div key={i} style={{ width:7, height:7, borderRadius:'50%', background: i<2 ? '#4080ff' : i===2 ? '#1aed8a' : 'rgba(255,255,255,0.13)', transition:'background 0.3s' }}/>
@@ -547,7 +738,7 @@ function CentralScreen({ screen }) {
     );
   };
   return (
-    <div style={{ width:'100%', paddingTop:'62.5%', position:'relative', background:'#0d1520', borderRadius:'10px', overflow:'hidden', border:'1px solid rgba(255,255,255,0.08)', boxShadow:'0 0 0 6px rgba(255,255,255,0.02), 0 20px 50px rgba(0,0,0,0.5)' }}>
+    <div style={{ width:'100%', paddingTop:'62.5%', position:'relative', background:'#080e1c', borderRadius:'10px', overflow:'hidden', border:'1px solid rgba(255,255,255,0.1)', boxShadow:'0 0 0 1px rgba(255,255,255,0.05), 0 0 0 6px rgba(255,255,255,0.02), 0 24px 60px rgba(0,0,0,0.7)' }}>
       <div style={{ position:'absolute', inset:0 }}>{renderInner()}</div>
     </div>
   );
@@ -567,7 +758,7 @@ function QuizRear() {
         {opts.map(o => {
           const correct = o==='Baga'; const picked = ans===o;
           return (
-            <button key={o} onClick={() => setAns(o)} style={{ padding:'7px 10px', borderRadius:'6px', textAlign:'left', background: picked?(correct?'rgba(26,237,138,0.18)':'rgba(255,69,69,0.14)'):'rgba(255,255,255,0.04)', border:`1px solid ${picked?(correct?'rgba(26,237,138,0.5)':'rgba(255,69,69,0.4)'):'rgba(255,255,255,0.07)'}`, color: picked?(correct?'#1aed8a':'rgba(255,100,100,0.9)'):'rgba(255,255,255,0.75)', fontFamily:'DM Sans', fontSize:'11px', cursor:'pointer' }}>
+            <button key={o} onClick={() => { setAns(o); const correct2 = o==='Baga'; window.VOICE && window.VOICE.speak(correct2 ? 'Correct! Baga Beach. Passport stamp unlocked.' : 'Not quite. Try again.', correct2?'#1aed8a':'#ff4f4f'); }} style={{ padding:'7px 10px', borderRadius:'6px', textAlign:'left', background: picked?(correct?'rgba(26,237,138,0.18)':'rgba(255,69,69,0.14)'):'rgba(255,255,255,0.04)', border:`1px solid ${picked?(correct?'rgba(26,237,138,0.5)':'rgba(255,69,69,0.4)'):'rgba(255,255,255,0.07)'}`, color: picked?(correct?'#1aed8a':'rgba(255,100,100,0.9)'):'rgba(255,255,255,0.75)', fontFamily:'DM Sans', fontSize:'11px', cursor:'pointer' }}>
               {o}{ans && correct && ' ✓'}
             </button>
           );
@@ -601,8 +792,8 @@ function VoteRear() {
       </div>
       <TimerBar duration={20} color='#1aed8a'/>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'6px', marginTop:'10px', flex:1, alignItems:'end' }}>
-        <button onClick={() => setVote('yes')} style={{ padding:'12px 0', borderRadius:'8px', fontSize:'20px', background: vote==='yes'?'rgba(26,237,138,0.22)':'rgba(26,237,138,0.06)', border:`1.5px solid ${vote==='yes'?'#1aed8a':'rgba(26,237,138,0.25)'}`, cursor:'pointer', transition:'all 0.2s' }}>👍</button>
-        <button onClick={() => setVote('no')} style={{ padding:'12px 0', borderRadius:'8px', fontSize:'20px', background: vote==='no'?'rgba(255,69,69,0.18)':'rgba(255,255,255,0.03)', border:`1.5px solid ${vote==='no'?'#ff4545':'rgba(255,255,255,0.1)'}`, cursor:'pointer', transition:'all 0.2s' }}>👎</button>
+        <button onClick={() => { setVote('yes'); window.VOICE && window.VOICE.speak('Yes! Navigating to Panhala Fort.','#1aed8a'); }} style={{ padding:'12px 0', borderRadius:'8px', fontSize:'20px', background: vote==='yes'?'rgba(26,237,138,0.22)':'rgba(26,237,138,0.06)', border:`1.5px solid ${vote==='yes'?'#1aed8a':'rgba(26,237,138,0.25)'}`, cursor:'pointer', transition:'all 0.2s' }}>👍</button>
+        <button onClick={() => { setVote('no'); window.VOICE && window.VOICE.speak('Okay, skipping Panhala Fort.','#ff4f4f'); }} style={{ padding:'12px 0', borderRadius:'8px', fontSize:'20px', background: vote==='no'?'rgba(255,69,69,0.18)':'rgba(255,255,255,0.03)', border:`1.5px solid ${vote==='no'?'#ff4545':'rgba(255,255,255,0.1)'}`, cursor:'pointer', transition:'all 0.2s' }}>👎</button>
       </div>
     </div>
   );
@@ -1101,10 +1292,25 @@ function FeatureView({ feature }) {
     }
   };
 
+  // Speak voice when screen changes
+  React.useEffect(() => {
+    if(window.VOICE) {
+      const key = `${feature.id}-${si}`;
+      const text = window.VOICE.VOICE_MAP[key];
+      const colors = { F9:'#ff4f4f', F10:'#9d6fff', F11:'#1aed8a', F13:'#f5a62a', F1:'#4f8fff', F5:'#9d6fff' };
+      const fid = feature.id;
+      if(text) {
+        setTimeout(() => window.VOICE.speak(text, colors[fid] || '#1aed8a'), 350);
+      } else if(window.VOICE) {
+        window.VOICE.hideToast();
+      }
+    }
+  }, [feature.id, si]);
+
   return (
     <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
       {/* Feature header */}
-      <div style={{ padding:'14px 24px 12px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', gap:'12px', flexShrink:0 }}>
+      <div data-voice-key={`${feature.id}-${si}`} style={{ padding:'14px 24px 12px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', gap:'12px', flexShrink:0 }}>
         <div style={{ display:'flex', alignItems:'center', gap:'10px', flex:1 }}>
           <div style={{ fontFamily:'Space Mono', fontSize:'11px', color:'var(--text3)' }}>F{feature.num || feature.id.replace('F','')}</div>
           <div style={{ width:1, height:16, background:'var(--border2)' }}/>
@@ -1203,6 +1409,9 @@ function Hub({ onSelect }) {
                   </div>
                   <div style={{ fontFamily:'Space Grotesk', fontWeight:'500', fontSize:'12px', color:'var(--text1)', lineHeight:1.4, marginBottom:'4px' }}>{f.name}</div>
                   <div style={{ fontFamily:'DM Sans', fontSize:'10px', color:'var(--text3)', lineHeight:1.4 }}>{f.short}</div>
+                  <div style={{ display:'flex', alignItems:'center', gap:3, marginTop:4 }}>
+                    {(() => { const key0 = `${f.id}-0`; const hasVoice = window.VOICE && window.VOICE.VOICE_MAP && window.VOICE.VOICE_MAP[key0]; return hasVoice ? <span style={{ fontFamily:'Space Mono', fontSize:7, color:'rgba(26,237,138,0.5)', background:'rgba(26,237,138,0.08)', padding:'1px 5px', borderRadius:2, border:'1px solid rgba(26,237,138,0.18)' }}>🔊 voice</span> : null; })()}
+                  </div>
                   <div style={{ display:'flex', alignItems:'center', gap:'4px', marginTop:'8px' }}>
                     {f.screens.map((s,i) => <span key={i} style={{ fontFamily:'Space Mono', fontSize:'7px', padding:'1px 4px', borderRadius:'2px', background:'rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.25)', border:'1px solid rgba(255,255,255,0.07)' }}>{DEVICE_ICONS[s.device]}</span>)}
                   </div>
@@ -1237,7 +1446,7 @@ function App() {
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column' }}>
       {/* Top bar */}
-      <div style={{ height:42, flexShrink:0, display:'flex', alignItems:'center', padding:'0 18px', borderBottom:'1px solid var(--border)', background:'rgba(9,9,15,0.95)', backdropFilter:'blur(12px)', gap:'12px', zIndex:10 }}>
+      <div style={{ height:42, flexShrink:0, display:'flex', alignItems:'center', padding:'0 18px', borderBottom:'1px solid rgba(255,255,255,0.07)', background:'rgba(3,4,10,0.97)', backdropFilter:'blur(24px)', gap:'12px', zIndex:10, boxShadow:'0 1px 0 rgba(255,255,255,0.04)' }}>
         <div style={{ fontFamily:'Space Grotesk', fontWeight:'700', fontSize:'11px', color:'rgba(255,255,255,0.5)', letterSpacing:'2px', textTransform:'uppercase' }}>UI UDP</div>
         <div style={{ width:1, height:14, background:'var(--border2)' }}/>
         <div style={{ fontFamily:'DM Sans', fontSize:'10px', color:'var(--text3)' }}>Unified Driver Platform — Interface Prototype</div>
@@ -1741,5 +1950,200 @@ setTimeout(() => {
   }
 }, 50);
 </script>
+
+<!-- ══ VOICE OUTPUT SYSTEM ══ -->
+<div id="voice-toast">
+  <div class="wf-container" id="voice-wf"></div>
+  <div class="toast-label">🔊 System</div>
+  <div class="toast-text" id="voice-text"></div>
+</div>
+<button id="voice-speaker-btn" title="Toggle voice output">🔊</button>
+
+<script>
+// ── Web Speech API Voice Output ──────────────────────────────────
+(function() {
+  var synth = window.speechSynthesis;
+  var muted = false;
+  var currentUtterance = null;
+  var toastTimer = null;
+  var wfInterval = null;
+
+  // Voice output map: feature+screen → voice text
+  var VOICE_MAP = {
+    // F1 Traffic
+    'F1-0': 'Calm Protocol on. You are 22 minutes from clearing this jam.',
+    'F1-1': 'You will arrive 11 minutes late to Design Standup. Shall I notify Priya?',
+    'F1-2': 'Message sent. Running 11 minutes late. See you soon.',
+    'F1-3': 'Traffic easing. Calm Protocol off.',
+    // F2 Air
+    'F2-0': 'Switching to filtered air. Pollution detected ahead.',
+    'F2-1': '',
+    // F4 Honk
+    'F4-0': '',
+    'F4-1': 'Car behind. Light is green. Move forward.',
+    // F5 Persona
+    'F5-0': 'Auto rushing. Delivery rider, running late.',
+    'F5-1': '',
+    // F6a Social
+    'F6a-0': 'Social Mode suggested. Press left to confirm, right to skip.',
+    'F6a-1': '',
+    'F6a-2': '',
+    'F6a-3': '',
+    // F6b Work
+    'F6b-0': 'Switch to Work Mode? Press left to confirm.',
+    'F6b-1': '',
+    'F6b-2': 'On call. Team Standup. Microphone active.',
+    'F6b-3': '',
+    // F7 Onboarding
+    'F7-0': "Let's get to know you. Two minutes. Start now or later?",
+    'F7-1': 'Profile saved. Vegetarian family, temples and nature, breaks every hour. Social Mode suggested.',
+    // F8 Discovery
+    'F8-0': 'Mahalakshmi Temple, Kolhapur. 6 kilometres left. Low crowd right now. Want to visit?',
+    'F8-1': 'Shahu Boarding. Vegetarian. On route. 25 minutes.',
+    'F8-2': '',
+    // F9 VRU
+    'F9-0': '',
+    'F9-1': 'Pedestrian crossing. Slow down.',
+    'F9-2': 'Animal detected at 80 metres. Lower urgency.',
+    // F10 Glare
+    'F10-0': '',
+    'F10-1': '',
+    'F10-2': 'Glare management paused. 30 seconds. Resuming automatically.',
+    // F11 Safety
+    'F11-0': 'Safety net active. Amma has been notified.',
+    'F11-1': '',
+    'F11-2': 'Still okay? Press left button to confirm.',
+    'F11-3': 'Help notified. Stay calm. Location shared.',
+    'F11-4': '',
+    // F12 Privacy
+    'F12-0': '',
+    'F12-1': '',
+    'F12-2': '',
+    // F13 Fatigue
+    'F13-0': 'Take a breath.',
+    'F13-1': 'Break in 8 kilometres. Coffee ahead. Yes or not yet.',
+    'F13-2': '',
+  };
+
+  function makeWaveform(container, color) {
+    container.innerHTML = '';
+    var heights = [0.4, 0.7, 1, 0.8, 0.6, 0.9, 0.7, 0.5, 0.8, 1, 0.6];
+    heights.forEach(function(h, i) {
+      var bar = document.createElement('div');
+      bar.className = 'wf-bar';
+      bar.style.height = (h * 18) + 'px';
+      bar.style.background = color || '#1aed8a';
+      bar.style.animationDuration = (0.35 + Math.random() * 0.3) + 's';
+      bar.style.animationDelay = (i * 0.07) + 's';
+      container.appendChild(bar);
+    });
+  }
+
+  function showToast(text, color) {
+    var toast = document.getElementById('voice-toast');
+    var textEl = document.getElementById('voice-text');
+    var wfEl = document.getElementById('voice-wf');
+    if (!toast || !textEl) return;
+    
+    textEl.textContent = '"' + text + '"';
+    toast.style.borderColor = (color || 'rgba(26,237,138,0.4)');
+    makeWaveform(wfEl, color || '#1aed8a');
+    toast.classList.add('visible');
+    
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() {
+      toast.classList.remove('visible');
+    }, Math.max(3500, text.length * 65));
+  }
+
+  function hideToast() {
+    var toast = document.getElementById('voice-toast');
+    if (toast) toast.classList.remove('visible');
+    if (toastTimer) clearTimeout(toastTimer);
+  }
+
+  function speak(text, color) {
+    if (!text || text.trim() === '') return;
+    
+    // Always show toast
+    showToast(text, color);
+    
+    if (muted || !synth) return;
+    
+    // Cancel any ongoing speech
+    synth.cancel();
+    
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.88;
+    utter.pitch = 0.95;
+    utter.volume = 0.9;
+    
+    // Try to get a good voice
+    var voices = synth.getVoices();
+    var preferred = voices.find(function(v) {
+      return v.lang === 'en-IN' || v.name.includes('Google') && v.lang.startsWith('en');
+    }) || voices.find(function(v) { return v.lang.startsWith('en'); });
+    if (preferred) utter.voice = preferred;
+    
+    utter.onend = function() { currentUtterance = null; };
+    currentUtterance = utter;
+    synth.speak(utter);
+  }
+
+  // Toggle mute button
+  var muteBtn = document.getElementById('voice-speaker-btn');
+  if (muteBtn) {
+    muteBtn.addEventListener('click', function() {
+      muted = !muted;
+      muteBtn.textContent = muted ? '🔇' : '🔊';
+      muteBtn.className = muted ? 'muted' : '';
+      if (muted && synth) synth.cancel();
+    });
+  }
+
+  // Load voices async
+  if (synth && synth.onvoiceschanged !== undefined) {
+    synth.onvoiceschanged = function() { synth.getVoices(); };
+  }
+
+  // Expose globally so React can call it
+  window.VOICE = { speak: speak, VOICE_MAP: VOICE_MAP, hideToast: hideToast };
+  
+})();
+</script>
+
+<script type="text/babel">
+// ── Voice integration patch ──────────────────────────────────
+const { useEffect: useVoiceEffect } = React;
+
+// Monkey-patch FeatureView to emit voice on screen change
+const _OriginalFeatureView = FeatureView;
+
+// We patch via a global observer on screen index changes
+// by intercepting screen navigation clicks
+(function patchVoice() {
+  // Auto-speak when feature/screen loads - use MutationObserver to detect changes
+  var lastKey = '';
+  
+  function checkAndSpeak() {
+    // Look for active feature from DOM markers
+    var titleEl = document.querySelector('[data-voice-key]');
+    if (titleEl) {
+      var key = titleEl.getAttribute('data-voice-key');
+      if (key !== lastKey) {
+        lastKey = key;
+        if (window.VOICE && window.VOICE.VOICE_MAP[key]) {
+          var colors = { F9:'#ff4f4f', F10:'#ff4f4f', F11:'#ff4f4f', F13:'#f5a62a' };
+          var fid = key.split('-')[0];
+          window.VOICE.speak(window.VOICE.VOICE_MAP[key], colors[fid] || '#1aed8a');
+        }
+      }
+    }
+  }
+  
+  setInterval(checkAndSpeak, 300);
+})();
+</script>
+
 </body>
 </html>
