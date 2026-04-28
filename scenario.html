@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADAS Scenario Simulator — IIIT Hyderabad Team 3</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#03040c;--s1:#06080f;--s2:#0a0d1a;
+  --b1:rgba(255,255,255,0.055);--b2:rgba(255,255,255,0.11);
+  --t1:rgba(255,255,255,0.94);--t2:rgba(255,255,255,0.6);--t3:rgba(255,255,255,0.3);--t4:rgba(255,255,255,0.12);
+  --blue:#4f92ff;--green:#1aed8a;--amber:#f5a82a;--red:#ff4f4f;--purple:#a57fff;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--t1);font-family:'Outfit',sans-serif;-webkit-font-smoothing:antialiased}
+#root{display:grid;grid-template-rows:46px 1fr;height:100vh}
+
+/* TOPBAR */
+#topbar{display:flex;align-items:center;padding:0 18px;gap:12px;background:rgba(3,4,12,0.98);border-bottom:1px solid var(--b1);z-index:100}
+.brand{font-family:'Syne',sans-serif;font-weight:800;font-size:13px}
+.brand-sub{font-size:8px;color:var(--t4);font-family:'JetBrains Mono',monospace;letter-spacing:0.3px}
+.vdiv{width:1px;height:18px;background:var(--b2)}
+.scen-pills{display:flex;gap:4px}
+.sp{padding:3px 12px;border-radius:20px;cursor:pointer;font-family:'Syne',sans-serif;font-size:10px;font-weight:600;border:1px solid var(--b1);background:transparent;color:var(--t3);transition:all .2s}
+.sp.active{color:#000}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+#voiceToast{display:none;align-items:center;gap:6px;padding:3px 10px;border-radius:6px;background:rgba(26,237,138,0.07);border:1px solid rgba(26,237,138,0.25);font-size:10px;color:var(--t2);max-width:280px;overflow:hidden}
+#voiceToast.show{display:flex}
+.wf-bars{display:flex;align-items:center;gap:1.5px;flex-shrink:0}
+.wf-bar{border-radius:1px;animation:wfP .5s ease-in-out infinite}
+@keyframes wfP{0%,100%{transform:scaleY(.2)}50%{transform:scaleY(1)}}
+.clock{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t2)}
+.spd{display:flex;align-items:baseline;gap:2px}
+.spd-n{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
+.spd-u{font-size:8px;color:var(--t4)}
+
+/* MAIN GRID */
+#main{display:grid;grid-template-columns:220px 1fr 272px;overflow:hidden}
+
+/* SIDEBAR */
+#sidebar{border-right:1px solid var(--b1);background:var(--s1);display:flex;flex-direction:column;overflow:hidden}
+.sb-head{padding:12px 14px;border-bottom:1px solid var(--b1);flex-shrink:0}
+.sb-sl{font-size:7px;color:var(--t4);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:4px}
+.sb-sn{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.sb-ss{font-size:9px;color:var(--t3);margin-top:2px}
+.sb-persona{font-size:8px;color:var(--t4);margin-top:4px;font-family:'JetBrains Mono',monospace}
+.step-list{flex:1;overflow-y:auto;padding:6px}
+.si{padding:8px 10px;border-radius:7px;margin-bottom:2px;cursor:pointer;border:1px solid transparent;transition:all .15s;position:relative}
+.si:hover{background:rgba(255,255,255,0.025)}
+.si-num{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--t4);margin-bottom:2px;letter-spacing:1px}
+.si-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;line-height:1.3;color:var(--t2)}
+.si.active .si-title{color:var(--t1)}
+.si-feat{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:8px;padding:1px 6px;border-radius:3px;margin-top:4px}
+.si-check{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:10px}
+.sb-progress{padding:10px 14px;border-top:1px solid var(--b1);flex-shrink:0}
+.pb-row{display:flex;justify-content:space-between;font-size:8px;color:var(--t4);font-family:'JetBrains Mono',monospace;margin-bottom:5px}
+.pb{height:3px;background:var(--b1);border-radius:2px;overflow:hidden}
+.pb-fill{height:100%;border-radius:2px;transition:width .4s ease}
+.sb-ctrls{padding:8px 10px;border-top:1px solid var(--b1);flex-shrink:0;display:flex;flex-direction:column;gap:5px}
+.auto-btn{width:100%;padding:7px;border-radius:6px;cursor:pointer;font-family:'Syne',sans-serif;font-size:10px;font-weight:600;border:1px solid var(--b1);background:transparent;color:var(--t3);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px}
+.auto-btn.on{background:rgba(26,237,138,0.08);border-color:rgba(26,237,138,0.3);color:var(--green)}
+.nav-row{display:flex;gap:5px}
+.nb{flex:1;padding:7px;border-radius:6px;cursor:pointer;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;border:1px solid var(--b1);background:rgba(255,255,255,0.03);color:var(--t2);transition:all .2s}
+.nb:disabled{opacity:0.25;cursor:default}
+.nb.primary{border:none;color:#000}
+
+/* SIM */
+#sim{display:grid;grid-template-rows:1fr 44px;overflow:hidden}
+#canvas{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;overflow:hidden}
+.panel{position:relative;overflow:hidden}
+.panel-label{position:absolute;top:6px;left:8px;font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--t4);letter-spacing:1.5px;text-transform:uppercase;z-index:10}
+.p-hud{border-right:1px solid var(--b1);border-bottom:1px solid var(--b1)}
+.p-central{border-bottom:1px solid var(--b1)}
+.p-rear{border-right:1px solid var(--b1)}
+
+/* HUD */
+#hud{width:100%;height:100%;position:relative;background:#030609;overflow:hidden}
+#hud-sky{position:absolute;inset:0}
+#hud-svg{position:absolute;inset:0;width:100%;height:100%}
+#hud-overlay{position:absolute;inset:0;pointer-events:none}
+#hud-band{position:absolute;bottom:0;left:0;right:0;padding:9px 14px 11px;background:rgba(2,3,8,0.94);backdrop-filter:blur(22px);border-top:2px solid var(--blue);display:grid;grid-template-columns:76px 1fr 100px;align-items:center;gap:6px;box-shadow:0 -6px 28px rgba(0,0,0,0.8)}
+#hud-spd{font-family:'Syne',sans-serif;font-size:24px;font-weight:700}
+#hud-center{font-family:'Syne',sans-serif;font-size:12px;font-weight:600;text-align:center;line-height:1.4}
+#hud-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+
+/* CENTRAL */
+#central{width:100%;height:100%;position:relative;background:#060d16;overflow:hidden}
+#central-svg{position:absolute;inset:0;width:100%;height:100%}
+#central-nav{position:absolute;top:6px;left:6px;right:6px;background:rgba(4,6,14,0.86);backdrop-filter:blur(12px);border-radius:5px;border:1px solid var(--b1);padding:5px 9px;display:flex;justify-content:space-between;align-items:center}
+#central-cards{position:absolute;bottom:0;left:0;right:0}
+#central-ambient{position:absolute;bottom:9px;right:9px;display:none;align-items:center;gap:5px;background:rgba(4,6,14,0.9);backdrop-filter:blur(8px);border-radius:20px;padding:3px 9px;border:1px solid var(--b1)}
+#central-ambient.show{display:flex}
+.c-card{background:rgba(4,6,16,0.97);backdrop-filter:blur(24px);border-radius:9px 9px 0 0;border:1px solid var(--b2);border-bottom:none;padding:11px 13px 13px;animation:slideUp .3s ease}
+
+/* REAR + PHONE */
+#rear{width:100%;height:100%;overflow:hidden;background:linear-gradient(160deg,#060811,#08091a)}
+#phone-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#06070f,#09091a)}
+.phone-frame{width:148px;height:248px;border-radius:22px;background:#06070f;border:2px solid rgba(255,255,255,0.11);position:relative;overflow:hidden;box-shadow:0 0 0 7px rgba(255,255,255,0.015),0 18px 55px rgba(0,0,0,0.75)}
+.phone-notch{width:46px;height:7px;background:#06070f;border-radius:0 0 7px 7px;position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:10;border:1px solid rgba(255,255,255,0.05);border-top:none}
+.phone-inner{padding:18px 9px 9px;height:100%;display:flex;flex-direction:column}
+
+/* STEPBAR */
+#stepbar{display:flex;align-items:center;padding:0 14px;gap:10px;background:rgba(3,4,12,0.98);border-top:1px solid var(--b1)}
+.sbd{height:7px;border-radius:4px;cursor:pointer;transition:all .22s}
+.sb-lbl{font-size:9px;color:var(--t3);font-family:'JetBrains Mono',monospace}
+.sb-spacer{flex:1}
+.snb{padding:5px 14px;border-radius:6px;cursor:pointer;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;transition:all .2s;border:1px solid var(--b2);background:rgba(255,255,255,0.03);color:var(--t2)}
+.snb.primary{border:none;color:#000}
+.snb:disabled{opacity:0.22;cursor:default}
+
+/* INFO PANEL */
+#info{border-left:1px solid var(--b1);background:var(--s1);display:flex;flex-direction:column;overflow:hidden}
+.info-head{padding:11px 13px;border-bottom:1px solid var(--b1);flex-shrink:0}
+.info-tag{font-size:7px;color:var(--t4);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:4px}
+.info-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;line-height:1.4}
+.info-body{flex:1;overflow-y:auto;padding:11px 13px}
+.info-sec{margin-bottom:12px}
+.info-sec-lbl{font-size:7px;color:var(--t4);letter-spacing:1.2px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:5px}
+.info-desc{font-size:10px;color:var(--t2);line-height:1.65}
+.voice-box{border-radius:6px;padding:8px 10px;margin-bottom:10px}
+.voice-box-lbl{font-size:7px;letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:4px;display:flex;align-items:center;gap:5px}
+.voice-box-text{font-size:11px;color:var(--t1);font-style:italic;line-height:1.5}
+.play-btn{margin-top:5px;padding:2px 9px;border-radius:4px;font-size:9px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;border:none}
+.trigger-box{background:rgba(79,146,255,0.05);border:1px solid rgba(79,146,255,0.16);border-radius:5px;padding:7px 9px}
+.trigger-text{font-size:9px;color:rgba(130,180,255,0.75);line-height:1.6;font-family:'JetBrains Mono',monospace}
+.design-note{background:rgba(165,127,255,0.04);border:1px solid rgba(165,127,255,0.16);border-radius:5px;padding:7px 9px;margin-top:7px}
+.dn-text{font-size:9px;color:rgba(185,160,255,0.7);line-height:1.6;font-style:italic}
+.feat-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.feat-chip{font-size:8px;padding:2px 8px;border-radius:3px;font-family:'Syne',sans-serif;font-weight:600}
+.silent-box{background:rgba(255,255,255,0.02);border:1px solid var(--b1);border-radius:5px;padding:7px 9px}
+.silent-txt{font-size:9px;color:var(--t4);font-family:'JetBrains Mono',monospace}
+
+/* HUD overlays */
+.hud-persona{position:absolute;top:26%;right:16%;background:rgba(8,10,24,0.92);backdrop-filter:blur(10px);border:1px solid rgba(165,127,255,0.45);border-radius:5px;padding:4px 10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;color:rgba(200,180,255,0.92);animation:fadeIn .4s ease;box-shadow:0 2px 12px rgba(165,127,255,0.2)}
+.hud-shield{position:absolute;top:16%;right:13%;font-size:22px;animation:shieldFloat 2s ease-in-out infinite}
+@keyframes shieldFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes breathe{0%,100%{opacity:.65;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}
+@keyframes countDown{from{width:100%}to{width:0%}}
+
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:2px}
+</style>
+</head>
+<body>
+<div id="root">
+  <div id="topbar">
+    <div><div class="brand">ADAS Simulator</div><div class="brand-sub">IIIT Hyderabad · Team 3</div></div>
+    <div class="vdiv"></div>
+    <div class="scen-pills" id="scenPills"></div>
+    <div class="top-right">
+      <div id="voiceToast"><div class="wf-bars" id="topWf"></div><span id="vtxt" style="font-size:10px;color:var(--t2);font-style:italic"></span></div>
+      <div class="vdiv"></div>
+      <div class="clock" id="clockEl">09:02</div>
+      <div class="spd"><span class="spd-n" id="spdEl">0</span><span class="spd-u">km/h</span></div>
+    </div>
+  </div>
+  <div id="main">
+    <div id="sidebar">
+      <div class="sb-head">
+        <div class="sb-sl">Scenario</div>
+        <div class="sb-sn" id="sbName"></div>
+        <div class="sb-ss" id="sbSub"></div>
+        <div class="sb-persona" id="sbPersona"></div>
+      </div>
+      <div class="step-list" id="stepList"></div>
+      <div class="sb-progress">
+        <div class="pb-row"><span>Progress</span><span id="pbLabel"></span></div>
+        <div class="pb"><div class="pb-fill" id="pbFill" style="width:0%"></div></div>
+      </div>
+      <div class="sb-ctrls">
+        <button class="auto-btn" id="autoBtn">▶&nbsp; Auto-play scenario</button>
+        <div class="nav-row">
+          <button class="nb" id="prevBtn" disabled>← Prev</button>
+          <button class="nb primary" id="nextBtn">Next →</button>
+        </div>
+      </div>
+    </div>
+    <div id="sim">
+      <div id="canvas">
+        <div class="panel p-hud">
+          <div class="panel-label">◈ HUD · Driver View</div>
+          <div id="hud">
+            <div id="hud-sky"></div>
+            <svg id="hud-svg" viewBox="0 0 400 280"></svg>
+            <div id="hud-overlay"></div>
+            <div id="hud-band">
+              <div><span id="hud-spd" style="font-family:'Syne',sans-serif;font-size:24px;font-weight:700">0</span><span style="font-size:8px;color:var(--t4);margin-left:2px">km/h</span></div>
+              <div id="hud-center" style="font-family:'Syne',sans-serif;font-size:12px;font-weight:600;text-align:center;line-height:1.4"></div>
+              <div id="hud-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel p-central">
+          <div class="panel-label">▬ Central Display</div>
+          <div id="central">
+            <svg id="central-svg" viewBox="0 0 380 240"></svg>
+            <div id="central-nav">
+              <div id="cn-dest" style="font-family:'Syne',sans-serif;font-size:10px;font-weight:500;color:var(--t2)">—</div>
+              <div id="cn-eta" style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--t3)">—</div>
+            </div>
+            <div id="central-cards"></div>
+            <div id="central-ambient"></div>
+          </div>
+        </div>
+        <div class="panel p-rear">
+          <div class="panel-label">⊞ Rear Screen</div>
+          <div id="rear"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-label">⊏ Companion App</div>
+          <div id="phone-wrap"><div class="phone-frame"><div class="phone-notch"></div><div class="phone-inner" id="phoneInner"></div></div></div>
+        </div>
+      </div>
+      <div id="stepbar">
+        <div style="display:flex;gap:4px;align-items:center" id="stepDots"></div>
+        <div class="sb-lbl" id="sbLbl">Step 1 of 1</div>
+        <div class="sb-spacer"></div>
+        <button class="snb" id="prevBtn2" disabled>← Prev</button>
+        <button class="snb primary" id="nextBtn2">Next →</button>
+      </div>
+    </div>
+    <div id="info">
+      <div class="info-head">
+        <div class="info-tag" id="infoTag">—</div>
+        <div class="info-title" id="infoTitle">Select a step</div>
+      </div>
+      <div class="info-body" id="infoBody"></div>
+    </div>
+  </div>
+</div>
+<script>
+'use strict';
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+var SCENARIOS = [
+{
+  id:'calm', label:'Calm Protocol', emoji:'🚦',
+  subtitle:'Stuck in Traffic — Silk Board',
+  persona:'Arjun, 34 · Urban Commuter · 9:02 AM',
+  color:'#4f92ff',
+  steps:[
+    { feat:'F1', featLabel:'Traffic Prediction',
+      title:'Jam Detected — Calm Protocol On',
+      time:'09:02', speed:7,
+      desc:'Speed drops below 8 km/h for 90 seconds. Jam detected. HUD: "Calm Protocol on · 14 min to clear." No sound.',
+      trigger:'Speed < 8 km/h for 90s · Jam ML model · Clearance ETA calculated',
+      note:'No alert tone. HUD updates silently. Driver does nothing.',
+      voice:'Calm Protocol on. 14 minutes to clear.', vt:'info',
+      hud:{ sky:'day', speed:7, center:'Calm Protocol on · 14 min to clear', ccolor:'#4f92ff',
+            right:{ type:'badge', text:'Silk Board Jam', color:'#4f92ff' } },
+      central:{ dest:'Koramangala → Indiranagar', eta:'32 min', card:null, ambient:{icon:'🌿',text:'Calm Protocol',color:'#4f92ff'} },
+      rear:'idle', phone:'idle', feats:['F1'] },
+    { feat:'F1', featLabel:'Traffic Prediction',
+      title:'Calendar: 11 Min Late to Standup',
+      time:'09:03', speed:5,
+      desc:'Calendar detects Design Standup at 10:00 AM. System calculates driver will be 11 min late. Card appears with one-tap send.',
+      trigger:'Calendar API · Meeting 10:00 AM · ETA delta +11 min late',
+      note:'The anxiety loop closes here. Driver knows exactly how late without touching the phone.',
+      voice:'You will arrive 11 minutes late to Design Standup. Shall I notify Priya?', vt:'ask',
+      hud:{ sky:'day', speed:5, center:'Design Standup · 11 min late', ccolor:'#f5a82a',
+            right:{ type:'badge', text:'10:00 AM · 57min', color:'#f5a82a' } },
+      central:{ dest:'Koramangala → Indiranagar', eta:'32 min', card:'lateness', ambient:null },
+      rear:'idle', phone:'idle', feats:['F1'] },
+    { feat:'F1', featLabel:'Traffic Prediction',
+      title:'Message Sent — Anxiety Loop Closed',
+      time:'09:04', speed:6,
+      desc:'Driver taps Send. "Running 11 min late, see you soon." Card dismissed. Driver stops mentally calculating.',
+      trigger:'Driver tap → Message Composer → SMS sent via preferred channel',
+      note:'One tap resolves the anxiety loop. Eyes stay forward the whole time.',
+      voice:'Message sent. Running 11 minutes late. See you soon.', vt:'confirm',
+      hud:{ sky:'day', speed:6, center:'Message sent · Priya notified ✓', ccolor:'#1aed8a', right:null },
+      central:{ dest:'Koramangala → Indiranagar', eta:'28 min', card:null, ambient:{icon:'✓',text:'Message sent',color:'#1aed8a'} },
+      rear:'idle', phone:'idle', feats:['F1'] },
+    { feat:'F2', featLabel:'Air & Thermal',
+      title:'Diesel Truck 15m — Vents Sealing',
+      time:'09:08', speed:4,
+      desc:'Camera detects diesel truck within 15m. PM2.5 spike predicted. Vents seal to recirculation in 8 seconds. Ioniser activates. Small badge in corner.',
+      trigger:'Camera: diesel 15m · PM2.5 sensor spike · Vent controller: seal 8s · Ioniser ON',
+      note:'No sound. No alert. A single badge icon appears bottom-right. 100% silent.',
+      voice:'', vt:'silent',
+      hud:{ sky:'day', speed:4, center:'Silk Board — 26 min to clear', ccolor:'rgba(255,255,255,0.7)', right:null },
+      central:{ dest:'Silk Board Junction', eta:'26 min', card:null, ambient:{icon:'🌿',text:'Filtered air on',color:'#1aed8a'} },
+      rear:'idle', phone:'idle', feats:['F2'] },
+    { feat:'F3', featLabel:'Body Protection',
+      title:'T+8 min — Lumbar Cycle Active',
+      time:'09:10', speed:3,
+      desc:'At T+0 seat micro-reclined 2° (driver unaware). Now T+8 min: lumbar air bladder begins 40s inflate / 20s deflate. Completely silent and invisible.',
+      trigger:'Jam >8 min · Seat Control Module · Lumbar bladder cycle · Footrest haptic at T+12',
+      note:'Driver is completely unaware. System works in the background. No intervention needed.',
+      voice:'', vt:'silent',
+      hud:{ sky:'day', speed:3, center:'Silk Board — 22 min to clear', ccolor:'rgba(255,255,255,0.65)',
+            right:{ type:'badge', text:'F3 Active', color:'#1aed8a' } },
+      central:{ dest:'Silk Board Junction', eta:'22 min', card:'timeline', ambient:null },
+      rear:'idle', phone:'idle', feats:['F2','F3'] },
+    { feat:'F4', featLabel:'Intentional Honk',
+      title:'1× Tap — Presence Signal Received',
+      time:'09:14', speed:0,
+      desc:'Light turns green. Driver behind taps horn once. Receiver HUD shows: "Car behind: light is green — move forward." Clears in 3 seconds.',
+      trigger:'Horn input: 1× short press · Gesture classifier: MOVE/PRESENCE · V2X transmit · Receiver HUD',
+      note:'Intent as information, not aggression. Non-F4 receivers hear a normal horn regardless.',
+      voice:'Car behind. Light is green. Move forward.', vt:'info',
+      hud:{ sky:'day', speed:0, center:'Presence signal received', ccolor:'#f5a82a',
+            right:{ type:'badge', text:'Car behind · move', color:'#f5a82a' } },
+      central:{ dest:'ORR Junction', eta:'18 min', card:'honk', ambient:null },
+      rear:'idle', phone:'idle', feats:['F4'] },
+    { feat:'F5', featLabel:'Persona Broadcast',
+      title:'Delivery Bike — Context Label (87%)',
+      time:'09:18', speed:28,
+      desc:'Delivery bike detected. Camera + radar + GPS zone + time of day → confidence 87%. HUD peripheral label: "Delivery · running late". Fades in 6 seconds.',
+      trigger:'Multi-sensor fusion · Confidence 87% (min 60%) · Peripheral HUD label · No data retained',
+      note:'Label is peripheral, low-contrast, time-bound. Purpose is empathy, not command.',
+      voice:'', vt:'silent',
+      hud:{ sky:'day', speed:28, center:'Koramangala 4th Block', ccolor:'rgba(255,255,255,0.75)', persona:'🛵 Delivery · running late', right:null },
+      central:{ dest:'Koramangala → Indiranagar', eta:'12 min', card:null, ambient:null },
+      rear:'idle', phone:'idle', feats:['F5'] },
+    { feat:'F1', featLabel:'Traffic Prediction',
+      title:'Traffic Cleared — Calm Protocol Off',
+      time:'09:22', speed:52,
+      desc:'Traffic clears. HUD: "Calm Protocol off." F2/F3 interventions stop. Seat returns to driving position over 20 seconds. No fanfare.',
+      trigger:'Speed > 25 km/h sustained · Jam cleared · Calm Protocol deactivated · All sub-features off',
+      note:'The off-state is as calm as the on-state. The system disappears quietly.',
+      voice:'Traffic cleared. Calm Protocol off.', vt:'info',
+      hud:{ sky:'day', speed:52, center:'Calm Protocol off', ccolor:'var(--t2)', right:null },
+      central:{ dest:'Indiranagar', eta:'8 min', card:null, ambient:null },
+      rear:'idle', phone:'idle', feats:[] }
+  ]
+},
+{
+  id:'discovery', label:'Discovery Mode', emoji:'⛰',
+  subtitle:'Family Road Trip — Pune → Goa NH48',
+  persona:'Suresh + Family · 5 passengers · 6:00 AM',
+  color:'#f5a82a',
+  steps:[
+    { feat:'F7', featLabel:'Behavioural Profiling',
+      title:'First Start — Voice Onboarding',
+      time:'06:00', speed:0,
+      desc:'First journey detected. Voice agent: "Let\'s get to know you — 2 minutes. Start now or later?" Any occupant can answer. No forms.',
+      trigger:'First start detected · Voice agent · Onboarding sequence · No keyboard required',
+      note:'100% voice-driven. No typing. Driver eyes stay forward. Any passenger can answer.',
+      voice:"Let's get to know you — 2 minutes. Start now or later?", vt:'ask',
+      hud:{ sky:'day', speed:0, center:'Welcome · Onboarding', ccolor:'#4db8ff', right:null },
+      central:{ dest:'Goa — NH48', eta:'9h 30min', card:'onboarding-start', ambient:null },
+      rear:'idle', phone:'idle', feats:['F7'] },
+    { feat:'F7', featLabel:'Behavioural Profiling',
+      title:'Q3 of 8 — Conversational Voice',
+      time:'06:02', speed:0,
+      desc:'8 questions in conversational voice. "What do you enjoy on trips?" → Temples + Nature. Any occupant answers.',
+      trigger:'Voice agent Q1-Q8 · Intent NLP engine · Profile Engine building in real-time',
+      note:'Questions feel like conversation, not a form. The car gets to know them.',
+      voice:'What do you enjoy exploring on trips?', vt:'ask',
+      hud:{ sky:'day', speed:0, center:'Q3 of 8 · Listening…', ccolor:'#4db8ff',
+            right:{ type:'badge', text:'Listening…', color:'#4db8ff' } },
+      central:{ dest:'Goa — NH48', eta:'9h 30min', card:'onboarding-q', ambient:null },
+      rear:'idle', phone:'idle', feats:['F7'] },
+    { feat:'F7', featLabel:'Behavioural Profiling',
+      title:'Profile Confirmed — Social Mode',
+      time:'06:04', speed:8,
+      desc:'Profile in plain language: Vegetarian family · Temples + Nature · Breaks every hour. One tap confirms. Social Mode suggested.',
+      trigger:'Q8 complete · Profile saved locally · Mode Suggestion Engine · Social Mode fires',
+      note:'Shown in plain language. One tap. Social Mode activates across all screens.',
+      voice:'Profile saved. Vegetarian family, temples and nature, breaks every hour.', vt:'confirm',
+      hud:{ sky:'day', speed:8, center:'Profile saved · Social Mode?', ccolor:'#1aed8a', right:null },
+      central:{ dest:'Goa — NH48', eta:'9h 22min', card:'profile-confirm', ambient:null },
+      rear:'idle', phone:'idle', feats:['F7'] },
+    { feat:'F6', featLabel:'Adaptive Modes',
+      title:'"Hey car, switch to Adventure Mode"',
+      time:'08:30', speed:88,
+      desc:'Voice command. System confirms: "Adventurous Mode on." Interface shifts to vibrant palette, discovery layout, passport counter visible.',
+      trigger:'Voice NLU · Mode Decision Engine · Profile match → Adventure · UI/Theme Controller',
+      note:'Mode switching is seamless under 2 seconds. System remembers mode per context.',
+      voice:"Adventurous Mode on — let's find something worth seeing.", vt:'confirm',
+      hud:{ sky:'day', speed:88, center:'Adventure Mode · Active', ccolor:'#f5a82a',
+            right:{ type:'badge', text:'⛰ Explore', color:'#f5a82a' } },
+      central:{ dest:'Goa — NH48', eta:'6h 44min', card:'mode-switch', ambient:null },
+      rear:{ type:'passport', stamps:2, total:6 }, phone:'idle', feats:['F6','F7','F8'] },
+    { feat:'F8', featLabel:'Discovery Engine',
+      title:'Temple Discovery Card Surfaces',
+      time:'10:42', speed:76,
+      desc:'System scores candidates: Profile + Route + Mode + Time + Crowd data. Card: Mahalakshmi Temple — 6 km left, ~30 min, Low crowd.',
+      trigger:'Profile 40% · Route 20% · Mode 15% · Time feasibility · Crowd: low · Card surfaced',
+      note:'Max 3 suggestions at any time. Single opt-in tap. No audio unless driver requests.',
+      voice:'Mahalakshmi Temple, Kolhapur. 6 kilometres left. Low crowd right now. Want to visit?', vt:'ask',
+      hud:{ sky:'day', speed:76, center:'Discovery · Temple nearby', ccolor:'#f5a82a',
+            right:{ type:'badge', text:'6 km left', color:'#ffd166' } },
+      central:{ dest:'Goa — NH48', eta:'5h 58min', card:'discovery-temple', ambient:null },
+      rear:{ type:'vote' }, phone:'idle', feats:['F8','F6'] },
+    { feat:'F8', featLabel:'Discovery Engine',
+      title:'4 Yes · 0 No — Navigation Reroutes',
+      time:'10:43', speed:64,
+      desc:'Group vote: 4 Yes, 0 No. Driver confirms. Navigation reroutes. Passport prepares stamp. New ETA 12:47 PM.',
+      trigger:'Group vote unanimous · Driver confirms · Navigation service reroutes · Passport stamp',
+      note:'Family decision made together. One tap from driver after group agrees.',
+      voice:'Family voted yes! Navigating to Mahalakshmi Temple. Passport stamp incoming.', vt:'confirm',
+      hud:{ sky:'day', speed:64, center:'Rerouting → Mahalakshmi Temple', ccolor:'#1aed8a',
+            right:{ type:'badge', text:'ETA 12:47', color:'#1aed8a' } },
+      central:{ dest:'Mahalakshmi Temple', eta:'12:47 PM', card:'reroute', ambient:null },
+      rear:{ type:'passport-stamp', stamps:3, total:6 }, phone:'idle', feats:['F8','F6'] },
+    { feat:'F13', featLabel:'Fatigue Monitor',
+      title:'Attention Score 52 — Gentle Nudge',
+      time:'14:20', speed:84,
+      desc:'Camera: elevated blink rate + reduced gaze dispersion + forward head lean. Attention Score: 52. Single chime. HUD: "Take a breath."',
+      trigger:'Cabin camera: blink rate↑ · gaze dispersion↓ · head lean · Score 52 → L1 Gentle Nudge',
+      note:'L1 is a whisper. No alarm. System trusts driver self-assessment.',
+      voice:'Take a breath.', vt:'nudge',
+      hud:{ sky:'dusk', speed:84, center:'Take a breath.', ccolor:'#f5a82a',
+            right:{ type:'score', score:52, color:'#f5a82a' } },
+      central:{ dest:'Goa — NH48', eta:'55 min', card:'fatigue-l1', ambient:null },
+      rear:'idle', phone:'idle', feats:['F13'] },
+    { feat:'F13', featLabel:'Fatigue Monitor',
+      title:'Score 44 — Break Suggestion (8 km)',
+      time:'14:38', speed:80,
+      desc:'Score 44 after 15 min. Two chimes. "Consider a break in 15 min. Coffee ahead." Cabin temp −2°C. Rest stop 8 km.',
+      trigger:'Score 44 → L2 · Two chimes · Discovery Engine: Dhaba 8km · Cabin temp −2°C',
+      note:'L2 gives driver full agency. Navigate or skip. No re-escalation if dismissed.',
+      voice:'Consider a break in 8 kilometres. There is a Dhaba ahead. Navigate?', vt:'ask',
+      hud:{ sky:'dusk', speed:80, center:'Break in 8 km — coffee ahead', ccolor:'#f5a82a',
+            right:{ type:'score', score:44, color:'#f5a82a' } },
+      central:{ dest:'Goa — NH48', eta:'48 min', card:'fatigue-break', ambient:null },
+      rear:'idle', phone:'idle', feats:['F13'] }
+  ]
+},
+{
+  id:'night', label:'Night Safe', emoji:'🌙',
+  subtitle:'Solo Night Return — Whitefield → HSR',
+  persona:'Ananya, 26 · Solo driver · Unfamiliar route',
+  color:'#a57fff',
+  steps:[
+    { feat:'F11', featLabel:'Solo Safety Net',
+      title:'Safety Net Activated — Shield On',
+      time:'22:00', speed:58,
+      desc:'Night + solo + unfamiliar route (2/4 conditions). Silent notification to trusted contacts: "Ananya is driving." Green shield in HUD corner. No sound.',
+      trigger:'Night + solo + unfamiliar route (2/4 conditions) · Silent notification · Shield HUD',
+      note:'No sound. No pop-up. The shield is a background assurance, not an alert.',
+      voice:'Safety net active. Your contact has been notified.', vt:'info',
+      hud:{ sky:'night', speed:58, center:'Whitefield — HSR Layout', ccolor:'rgba(255,255,255,0.75)', shield:'green',
+            right:{ type:'shield-green', text:'Safety net active' } },
+      central:{ dest:'HSR Layout', eta:'22 min', card:null, ambient:{icon:'🛡',text:'Live location shared',color:'#1aed8a'} },
+      rear:'idle', phone:{ type:'tracking', name:'Amma', msg:'Ananya is driving. Live location active. ETA 10:47 PM.', time:'22:00' },
+      feats:['F11'] },
+    { feat:'F9', featLabel:'VRU Detection',
+      title:'Pedestrian at 110m — Silent Yellow',
+      time:'22:08', speed:74,
+      desc:'Thermal camera detects pedestrian at 110m — beyond headlight range. Yellow silhouette + distance in right zone. No sound. Driver lifts off.',
+      trigger:'Thermal camera: PED heat signature 110m · Alert L1: visual only · No audio · No alarm',
+      note:'Level 1 is silent. The information is present without demanding attention.',
+      voice:'', vt:'silent',
+      hud:{ sky:'night', speed:74, center:'NH275 — Bangalore–Mysore', ccolor:'rgba(255,255,255,0.7)', shield:'green', vru:{ dist:110, level:1 },
+            right:{ type:'vru', dist:'110m', color:'rgba(255,220,50,0.9)', label:'Pedestrian detected' } },
+      central:{ dest:'HSR Layout', eta:'16 min', card:null, ambient:{icon:'🛡',text:'Safety net active',color:'#1aed8a'} },
+      rear:'idle', phone:{ type:'tracking', name:'Amma', msg:'Ananya is driving. All good.', time:'22:08' },
+      feats:['F11','F9'] },
+    { feat:'F9', featLabel:'VRU Detection',
+      title:'80m — Escalated Alert, Two Chimes',
+      time:'22:08', speed:55,
+      desc:'Pedestrian has not cleared at 80m. Red highlight + two chimes + "Pedestrian crossing — slow." Driver brakes gently.',
+      trigger:'PED at 80m · Not cleared · Alert L2: visual + 2 chimes · Red HUD highlight',
+      note:'Escalation is proportional. Driver responds naturally.',
+      voice:'Pedestrian crossing. Slow down.', vt:'warn',
+      hud:{ sky:'night', speed:55, center:'NH275 — slow', ccolor:'rgba(255,255,255,0.7)', shield:'green', vru:{ dist:80, level:2 },
+            right:{ type:'vru', dist:'80m', color:'#ff4f4f', label:'Pedestrian crossing · slow' } },
+      central:{ dest:'HSR Layout', eta:'15 min', card:null, ambient:null },
+      rear:'idle', phone:{ type:'tracking', name:'Amma', msg:'Ananya is driving. All good.', time:'22:08' },
+      feats:['F9','F11'] },
+    { feat:'F10', featLabel:'Predictive Glare',
+      title:'Headlights 400m — Smart Glass Dims',
+      time:'22:15', speed:78,
+      desc:'Forward camera detects headlights at 400m. Glare trajectory predicted. Localised dimming zones track headlights. Central 10° always clear.',
+      trigger:'Forward camera: headlights 400m · Glare Prediction Engine · Smart Glass zones active',
+      note:'System never fully darkens windshield. Dimming is localised and predictive.',
+      voice:'', vt:'silent',
+      hud:{ sky:'night', speed:78, center:'NH275 · night drive', ccolor:'rgba(255,255,255,0.7)', shield:'green', glare:true, right:null },
+      central:{ dest:'HSR Layout', eta:'10 min', card:null, ambient:{icon:'🕶',text:'Glare shield active',color:'#a57fff'} },
+      rear:'idle', phone:{ type:'tracking', name:'Amma', msg:'Ananya is driving. All good.', time:'22:15' },
+      feats:['F10','F11'] },
+    { feat:'F11', featLabel:'Solo Safety Net',
+      title:'Anomalous Stop — Check-In Prompt',
+      time:'22:28', speed:0,
+      desc:'Vehicle stopped at unclassified location for 6 minutes. HUD: "Still okay? Press left button to confirm." 2-minute window before any escalation.',
+      trigger:'Unclassified stop >5 min · Check-in protocol fires · 2-min response window',
+      note:'Soft amber. Not alarming. 2 full minutes before any escalation.',
+      voice:'Still okay? Press the left button to confirm.', vt:'ask',
+      hud:{ sky:'night', speed:0, center:'Still okay?', ccolor:'#f5a82a', shield:'amber', hudBorder:'#f5a82a',
+            right:{ type:'checkin', color:'#f5a82a' } },
+      central:{ dest:'HSR Layout', eta:'8 min', card:'checkin', ambient:null },
+      rear:'idle', phone:{ type:'alert', name:'Amma', msg:'Ananya stopped unexpectedly. Checking in. Will update if needed.', time:'22:28' },
+      feats:['F11'] },
+    { feat:'F12', featLabel:'Passenger Privacy',
+      title:'High-Footfall Junction — Privacy Glass',
+      time:'22:32', speed:0,
+      desc:'Stationary at high-footfall junction 45+ seconds. Windows frost silently. Outside: opaque silver. Inside: soft blobs of light. No driver notification.',
+      trigger:'Stationary 45s + high-footfall GPS zone · Privacy Glass Controller · Windows frost',
+      note:'No driver notification. One tap from inside clears any window instantly.',
+      voice:'', vt:'silent',
+      hud:{ sky:'night', speed:0, center:'Indiranagar Junction', ccolor:'rgba(255,255,255,0.65)', shield:'green', right:null },
+      central:{ dest:'HSR Layout', eta:'6 min', card:null, ambient:{icon:'❄',text:'Privacy glass active',color:'#a57fff'} },
+      rear:'privacy', phone:{ type:'tracking', name:'Amma', msg:'Ananya is driving. All good.', time:'22:32' },
+      feats:['F12','F11'] },
+    { feat:'F11', featLabel:'Solo Safety Net',
+      title:'Arrival — Location Sharing Ends',
+      time:'22:41', speed:0,
+      desc:'"Ananya has arrived home." Sent to Amma. Shield disappears. Location sharing ends. No data retained. Journey complete.',
+      trigger:'GPS: destination reached · Arrival message sent · F11 session closed · All data cleared',
+      note:'The off-state is as clean as the start. No data. No trace.',
+      voice:'You have arrived safely. Location sharing has ended.', vt:'confirm',
+      hud:{ sky:'night', speed:0, center:'Arrived safely ✓', ccolor:'#1aed8a', shield:null,
+            right:{ type:'arrived' } },
+      central:{ dest:'Home · HSR Layout', eta:'Arrived', card:null, ambient:{icon:'🏠',text:'Journey complete',color:'#1aed8a'} },
+      rear:'idle', phone:{ type:'arrived', name:'Amma', msg:'Ananya has arrived home safely. 10:41 PM.', time:'22:41' },
+      feats:[] }
+  ]
+}
+];
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+var S = { si:0, pi:0, auto:false, autoTimer:null };
+function sc() { return SCENARIOS[S.si]; }
+function st() { return sc().steps[S.pi]; }
+
+// ═══════════════════════════════════════════════
+// VOICE
+// ═══════════════════════════════════════════════
+var synth = window.speechSynthesis;
+var vtTimer = null;
+function mkWF(color, n) {
+  var s = '';
+  for(var i=0;i<(n||8);i++) {
+    var h = (0.3+Math.random()*0.7)*15;
+    var dur = (0.35+Math.random()*0.3).toFixed(2);
+    var del = (i*0.07).toFixed(2);
+    s += '<div class="wf-bar" style="width:2.5px;height:'+h+'px;background:'+color+';animation-duration:'+dur+'s;animation-delay:'+del+'s"></div>';
+  }
+  return s;
+}
+function speak(text, color) {
+  var toast = document.getElementById('voiceToast');
+  var vtxt = document.getElementById('vtxt');
+  var topWf = document.getElementById('topWf');
+  if(!text || !text.trim()) { if(toast) toast.classList.remove('show'); return; }
+  if(vtxt) vtxt.textContent = '"'+text+'"';
+  if(topWf) topWf.innerHTML = mkWF(color||'#1aed8a');
+  if(toast) { toast.style.borderColor=(color||'#1aed8a')+'50'; toast.classList.add('show'); }
+  if(vtTimer) clearTimeout(vtTimer);
+  vtTimer = setTimeout(function(){ toast && toast.classList.remove('show'); }, Math.max(3500, text.length*75));
+  if(!synth) return;
+  synth.cancel();
+  var u = new SpeechSynthesisUtterance(text);
+  u.rate=0.93; u.pitch=1.0; u.volume=1.0;
+  function doSpeak() {
+    var voices = synth.getVoices();
+    var v = null;
+    for(var i=0;i<voices.length;i++) { if(voices[i].lang==='en-IN'){v=voices[i];break;} }
+    if(!v) for(var i=0;i<voices.length;i++) { if(voices[i].lang.indexOf('en')===0){v=voices[i];break;} }
+    if(v) u.voice=v;
+    try { synth.speak(u); } catch(e) {}
+  }
+  if(synth.getVoices().length > 0) { doSpeak(); }
+  else { synth.onvoiceschanged = function(){ doSpeak(); synth.onvoiceschanged=null; }; synth.getVoices(); }
+}
+
+// ═══════════════════════════════════════════════
+// HUD RENDER
+// ═══════════════════════════════════════════════
+function renderHUD(h) {
+  var sky = document.getElementById('hud-sky');
+  var svg = document.getElementById('hud-svg');
+  var overlay = document.getElementById('hud-overlay');
+  var band = document.getElementById('hud-band');
+  var spdEl = document.getElementById('hud-spd');
+  var centerEl = document.getElementById('hud-center');
+  var rightEl = document.getElementById('hud-right');
+  var night = (h.sky==='night'||h.sky==='dusk');
+  var dusk = h.sky==='dusk';
+  sky.style.background = night
+    ? 'linear-gradient(180deg,#020408 0%,#050b14 55%,#0a1320 100%)'
+    : dusk ? 'linear-gradient(180deg,#0d0818 0%,#1a0f2e 40%,#0f1220 100%)'
+    : 'linear-gradient(180deg,#0a0e1e 0%,#0f1525 60%,#131d30 100%)';
+
+  // Road SVG
+  var rg = night?'#050a14':'#0a1020';
+  var dashes = '';
+  for(var i=0;i<4;i++) dashes+='<rect x="196" y="'+(108+i*36)+'" width="8" height="18" rx="2" fill="rgba(255,255,255,'+(0.25-i*0.04)+')" />';
+  var nLights = night ? '<circle cx="140" cy="92" r="3" fill="rgba(255,240,180,0.9)"/><ellipse cx="140" cy="92" rx="26" ry="20" fill="rgba(255,240,180,0.07)"/><circle cx="260" cy="92" r="3" fill="rgba(255,240,180,0.9)"/><ellipse cx="260" cy="92" rx="26" ry="20" fill="rgba(255,240,180,0.07)"/>' : '';
+  var duskOverlay = dusk ? '<rect width="400" height="280" fill="rgba(80,20,50,0.15)"/>' : '';
+  var glare = '';
+  if(h.glare) glare = '<ellipse cx="152" cy="84" rx="44" ry="50" fill="rgba(6,14,38,0.78)"/><ellipse cx="248" cy="84" rx="44" ry="50" fill="rgba(6,14,38,0.78)"/><rect x="177" y="58" width="46" height="78" rx="3" fill="none" stroke="rgba(26,237,138,0.38)" stroke-width="1.2"/><text x="200" y="54" text-anchor="middle" fill="rgba(26,237,138,0.6)" font-size="7" font-family="JetBrains Mono,monospace">10° clear</text>';
+  var vru = '';
+  if(h.vru) {
+    var vy = h.vru.level===1 ? 108 : 94;
+    var vcol = h.vru.level===1 ? 'rgba(255,220,50,0.85)' : '#ff4f4f';
+    var vfs = h.vru.level===1 ? 18 : 24;
+    var vglw = h.vru.level===1 ? '3px' : '9px';
+    vru = '<text x="200" y="'+vy+'" text-anchor="middle" font-size="'+vfs+'" style="filter:drop-shadow(0 0 '+vglw+' '+vcol+')" fill="'+vcol+'">🚶</text>';
+  }
+  svg.innerHTML = '<defs><linearGradient id="rg" x1="0.5" y1="0" x2="0.5" y2="1"><stop offset="0%" stop-color="'+rg+'"/><stop offset="100%" stop-color="'+(night?'#0a1525':'#111a2c')+'"/></linearGradient></defs>'
+    +'<polygon points="120,100 280,100 400,280 0,280" fill="url(#rg)"/>'+dashes+nLights+duskOverlay+glare+vru;
+
+  // Overlay
+  overlay.innerHTML = '';
+  if(h.persona) {
+    var pd = document.createElement('div');
+    pd.className = 'hud-persona';
+    pd.textContent = h.persona;
+    overlay.appendChild(pd);
+  }
+  if(h.shield) {
+    var sd = document.createElement('div');
+    sd.className = 'hud-shield';
+    sd.style.color = h.shield==='green' ? '#1aed8a' : '#f5a82a';
+    sd.style.filter = 'drop-shadow(0 0 8px '+(h.shield==='green'?'rgba(26,237,138,0.7)':'rgba(245,168,42,0.7)')+')';
+    sd.textContent = '🛡';
+    overlay.appendChild(sd);
+  }
+
+  // Band
+  band.style.borderTopColor = h.hudBorder || (night ? '#a57fff' : '#4f92ff');
+  spdEl.textContent = h.speed;
+  spdEl.style.color = h.speed < 10 ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.94)';
+  centerEl.textContent = h.center;
+  centerEl.style.color = h.ccolor || 'rgba(255,255,255,0.94)';
+
+  // Right zone
+  rightEl.innerHTML = '';
+  if(!h.right) return;
+  var r = h.right;
+  var d = document.createElement('div');
+  if(r.type==='badge') {
+    d.innerHTML = '<div style="display:flex;align-items:center;gap:5px;background:'+r.color+'14;border:1px solid '+r.color+'35;border-radius:5px;padding:4px 9px"><span style="font-family:JetBrains Mono,monospace;font-size:9px;color:'+r.color+';font-weight:600">'+r.text+'</span></div>';
+  } else if(r.type==='vru') {
+    d.innerHTML = '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">'
+      +'<div style="display:flex;align-items:center;gap:6px;background:'+r.color+'18;border:1px solid '+r.color+'50;border-radius:5px;padding:4px 10px"><span style="font-size:18px">🚶</span><span style="font-family:Syne,sans-serif;font-size:16px;font-weight:700;color:'+r.color+'">'+r.dist+'</span></div>'
+      +'<div style="font-size:8px;color:'+r.color+';font-family:Outfit,sans-serif">'+r.label+'</div>'
+      +'</div>';
+  } else if(r.type==='shield-green') {
+    d.innerHTML = '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">'
+      +'<div style="font-size:22px;filter:drop-shadow(0 0 8px rgba(26,237,138,0.7));animation:shieldFloat 2s ease-in-out infinite">🛡</div>'
+      +'<div style="font-size:8px;color:var(--green);font-family:Outfit,sans-serif">'+r.text+'</div>'
+      +'</div>';
+  } else if(r.type==='score') {
+    d.innerHTML = '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">'
+      +'<div style="font-family:JetBrains Mono,monospace;font-size:7px;color:var(--t4)">Attention</div>'
+      +'<div style="font-family:Syne,sans-serif;font-size:22px;font-weight:700;color:'+r.color+'">'+r.score+'</div>'
+      +'<div style="font-family:JetBrains Mono,monospace;font-size:7px;color:'+r.color+'">/100</div>'
+      +'</div>';
+  } else if(r.type==='checkin') {
+    d.innerHTML = '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'
+      +'<div style="font-family:Syne,sans-serif;font-size:11px;font-weight:600;color:'+r.color+'">2:00</div>'
+      +'<div style="width:80px;height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden"><div style="height:100%;background:'+r.color+';border-radius:2px;animation:countDown 120s linear forwards;box-shadow:0 0 5px '+r.color+'"></div></div>'
+      +'<div style="font-size:8px;color:'+r.color+';opacity:0.7">Press left to confirm</div>'
+      +'</div>';
+  } else if(r.type==='arrived') {
+    d.innerHTML = '<div style="font-size:24px;filter:drop-shadow(0 0 8px rgba(26,237,138,0.5))">🏠</div>';
+  }
+  rightEl.appendChild(d);
+}
+
+// ═══════════════════════════════════════════════
+// CENTRAL RENDER
+// ═══════════════════════════════════════════════
+function renderCentral(c, night) {
+  var svg = document.getElementById('central-svg');
+  var dest = document.getElementById('cn-dest');
+  var eta = document.getElementById('cn-eta');
+  var cardsEl = document.getElementById('central-cards');
+  var ambEl = document.getElementById('central-ambient');
+  var bg = night ? '#020a14' : '#07101c';
+  svg.innerHTML = '<rect width="380" height="240" fill="'+bg+'"/>'
+    +'<pattern id="cg" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/></pattern>'
+    +'<rect width="380" height="240" fill="url(#cg)"/>'
+    +'<line x1="0" y1="122" x2="380" y2="122" stroke="rgba(255,255,255,0.045)" stroke-width="1"/>'
+    +'<line x1="190" y1="0" x2="190" y2="240" stroke="rgba(255,255,255,0.045)" stroke-width="1"/>'
+    +'<path d="M 30 122 Q 70 118 110 104 L 180 96 Q 240 90 290 108 L 360 122" stroke="#4f92ff" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.55"/>'
+    +'<path d="M 30 122 Q 70 118 110 104 L 180 96 Q 240 90 290 108 L 360 122" stroke="rgba(79,146,255,0.14)" stroke-width="9" fill="none" stroke-linecap="round"/>'
+    +'<circle cx="180" cy="96" r="5" fill="#4f92ff" opacity="0.9"/><circle cx="180" cy="96" r="10" fill="rgba(79,146,255,0.2)"/>'
+    +'<circle cx="360" cy="122" r="4" fill="#1aed8a" opacity="0.7"/><circle cx="360" cy="122" r="8" fill="rgba(26,237,138,0.15)"/>'
+    +(night?'<rect width="380" height="240" fill="rgba(5,10,25,0.22)"/>':'');
+  dest.textContent = c.dest || '—';
+  eta.textContent = c.eta || '—';
+  cardsEl.innerHTML = '';
+  ambEl.className = 'central-ambient';
+  ambEl.innerHTML = '';
+  if(c.card) {
+    var card = buildCard(c.card, night);
+    if(card) cardsEl.appendChild(card);
+  }
+  if(c.ambient && !c.card) {
+    ambEl.className = 'central-ambient show';
+    ambEl.style.borderColor = c.ambient.color+'40';
+    ambEl.innerHTML = '<span style="font-size:12px">'+c.ambient.icon+'</span>'
+      +'<span style="font-family:Syne,sans-serif;font-size:9px;color:'+c.ambient.color+';font-weight:600">'+c.ambient.text+'</span>';
+  }
+}
+
+function buildCard(type, night) {
+  var step = st();
+  var color = sc().color;
+  var w = document.createElement('div');
+  w.className = 'c-card';
+  w.style.borderTopColor = color+'40';
+  w.style.boxShadow = '0 -10px 36px rgba(0,0,0,0.75)';
+
+  if(type==='lateness') {
+    w.innerHTML = '<div style="font-family:JetBrains Mono,monospace;font-size:7px;color:'+color+';letter-spacing:1px;text-transform:uppercase;margin-bottom:7px">📅 Upcoming Meeting</div>'
+      +'<div style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:var(--t1);margin-bottom:3px">Design Standup — 10:00 AM</div>'
+      +'<div style="font-family:Syne,sans-serif;font-size:18px;font-weight:600;color:'+color+';margin-bottom:8px">You\'ll arrive 11 min late</div>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button onclick="speakMsgSent()" style="flex:2;padding:8px;border-radius:6px;background:'+color+';border:none;color:#000;font-family:Syne,sans-serif;font-weight:700;font-size:11px;cursor:pointer;box-shadow:0 2px 10px '+color+'44">Send to Priya</button>'
+      +'<button style="padding:8px 12px;border-radius:6px;background:transparent;border:1px solid var(--b2);color:var(--t3);font-family:Syne,sans-serif;font-size:11px;cursor:pointer">Dismiss</button>'
+      +'</div>';
+  } else if(type==='timeline') {
+    var steps = [
+      {t:'T+0',a:'Micro-recline 2°',done:true,active:false},
+      {t:'T+8m',a:'Lumbar cycle',done:true,active:true},
+      {t:'T+12m',a:'Footrest haptic',done:false,active:false},
+      {t:'T+15m',a:'Posture check',done:false,active:false}
+    ];
+    var rows = '';
+    for(var i=0;i<steps.length;i++) {
+      var s2 = steps[i];
+      var dotColor = s2.active ? color : (s2.done ? color+'55' : 'rgba(255,255,255,0.1)');
+      var txtColor = s2.active ? 'var(--t1)' : (s2.done ? 'var(--t2)' : 'var(--t4)');
+      rows += '<div style="display:flex;align-items:center;gap:8px;padding:2px 0">'
+        +'<div style="font-family:JetBrains Mono,monospace;font-size:8px;color:var(--t4);width:36px;flex-shrink:0">'+s2.t+'</div>'
+        +'<div style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:'+dotColor+'"></div>'
+        +'<div style="font-size:10px;color:'+txtColor+'">'+s2.a+'</div>'
+        +(s2.active?'<div style="margin-left:auto;font-size:8px;color:'+color+';font-family:JetBrains Mono,monospace">Active</div>':'')
+        +'</div>';
+    }
+    w.innerHTML = '<div style="font-family:Syne,sans-serif;font-size:11px;font-weight:600;color:'+color+';margin-bottom:8px">Body Protection Protocol</div>'
+      +'<div style="display:flex;flex-direction:column;gap:5px">'+rows+'</div>';
+  } else if(type==='honk') {
+    var gestures = [{g:'1× Tap',l:'Presence / Move',i:'👆'},{g:'2× Tap',l:'Vehicle passing right',i:'👆👆'},{g:'Hold 1s',l:'Light is green',i:'✋'},{g:'Hold 2s+',l:'Urgent caution',i:'⚠'}];
+    var ghtml = '';
+    for(var g=0;g<gestures.length;g++) {
+      ghtml += '<div style="padding:5px 8px;border-radius:5px;background:rgba(255,255,255,0.03);border:1px solid var(--b1);display:flex;align-items:center;gap:6px">'
+        +'<span style="font-size:14px">'+gestures[g].i+'</span>'
+        +'<div><div style="font-family:Syne,sans-serif;font-size:9px;font-weight:600;color:'+color+'">'+gestures[g].g+'</div>'
+        +'<div style="font-size:8px;color:var(--t3)">'+gestures[g].l+'</div></div></div>';
+    }
+    w.innerHTML = '<div style="font-family:JetBrains Mono,monospace;font-size:7px;color:'+color+';letter-spacing:1px;margin-bottom:8px">F4 · INTENTIONAL HONK</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">'+ghtml+'</div>';
+  } else if(type==='onboarding-start') {
+    w.innerHTML = '<div style="font-family:JetBrains Mono,monospace;font-size:7px;color:#4db8ff;letter-spacing:1px;margin-bottom:10px">F7 · BEHAVIOURAL PROFILING</div>'
+      +'<div style="font-family:Syne,sans-serif;font-size:15px;font-weight:700;color:var(--t1);margin-bottom:4px">Let\'s get to know you</div>'
+      +'<div style="font-size:11px;color:var(--t2);margin-bottom:12px">2 minutes · Voice only · Any occupant can answer</div>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button onclick="speakOnboarding()" style="flex:2;padding:9px;border-radius:7px;background:#4db8ff;border:none;color:#000;font-family:Syne,sans-serif;font-weight:700;font-size:12px;cursor:pointer">Start now</button>'
+      +'<button style="padding:9px 14px;border-radius:7px;background:transparent;border:1px solid var(--b2);color:var(--t3);font-family:Syne,sans-serif;font-size:11px;cursor:pointer">Later</button>'
+      +'</div>';
+  } else if(type==='onboarding-q') {
+    var dotHtml = '';
+    for(var qi=0;qi<8;qi++) dotHtml += '<div style="width:7px;height:7px;border-radius:50%;background:'+(qi<3?'#4db8ff':qi===3?'rgba(77,184,255,0.4)':'rgba(255,255,255,0.1)')+'"></div>';
+    w.innerHTML = '<div style="display:flex;gap:4px;margin-bottom:10px">'+dotHtml+'</div>'
+      +'<div style="font-family:Syne,sans-serif;font-size:13px;font-weight:600;color:var(--t1);line-height:1.4;margin-bottom:10px">What do you enjoy exploring on trips?</div>'
+      +'<div style="display:flex;align-items:center;gap:6px">'+mkWF('#4db8ff',12)
+      +'<span style="font-size:9px;color:var(--t3);margin-left:4px;font-family:Outfit,sans-serif">Listening — any occupant may answer</span></div>';
+  } else if(type==='profile-confirm') {
+    var pills = ['Vegetarian family','Temples + Nature','Breaks every hour','5 passengers','Comfort > Speed'];
+    var pHtml = '';
+    for(var pi2=0;pi2<pills.length;pi2++) pHtml += '<span style="font-size:9px;padding:3px 10px;border-radius:12px;background:rgba(79,146,255,0.08);border:1px solid rgba(79,146,255,0.22);color:var(--t2)">'+pills[pi2]+'</span>';
+    w.innerHTML = '<div style="font-family:Syne,sans-serif;font-size:11px;font-weight:600;color:#1aed8a;margin-bottom:7px">Your profile:</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">'+pHtml+'</div>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button style="flex:2;padding:8px;border-radius:6px;background:#1aed8a;border:none;color:#000;font-family:Syne,sans-serif;font-weight:700;font-size:11px;cursor:pointer">Looks right</button>'
+      +'<button style="padding:8px 12px;border-radius:6px;background:transparent;border:1px solid var(--b2);color:var(--t3);font-family:Syne,sans-serif;font-size:11px;cursor:pointer">Edit</button>'
+      +'</div>';
+  } else if(type==='mode-switch') {
+    var mtags = ['Vibrant UI','Discovery focus','Rich recommendations','Passport active'];
+    var mtagHtml = '';
+    for(var mi=0;mi<mtags.length;mi++) mtagHtml += '<span style="font-size:8px;padding:2px 8px;border-radius:3px;background:'+color+'12;border:1px solid '+color+'30;color:'+color+';font-family:Syne,sans-serif">'+mtags[mi]+'</span>';
+    w.innerHTML = '<div style="font-family:JetBrains Mono,monospace;font-size:7px;color:'+color+';letter-spacing:1px;margin-bottom:8px">MODE ACTIVATED</div>'
+      +'<div style="font-family:Syne,sans-serif;font-size:16px;font-weight:800;color:'+color+';margin-bottom:4px">⛰ Adventure Mode</div>'
+      +'<div style="font-size:10px;color:var(--t2);margin-bottom:9px">Explore · Discover · Find hidden gems</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:4px">'+mtagHtml+'</div>';
+  } else if(type==='discovery-temple') {
+    var dtags = ['Vegetarian area','Historical','On your profile'];
+    var dtagHtml = '';
+    for(var di=0;di<dtags.length;di++) dtagHtml += '<span style="font-size:8px;padding:2px 7px;border-radius:3px;background:rgba(255,255,255,0.04);border:1px solid var(--b1);color:var(--t3)">'+dtags[di]+'</span>';
+    w.innerHTML = '<div style="font-family:JetBrains Mono,monospace;font-size:7px;color:'+color+';letter-spacing:1px;margin-bottom:7px">🛕 WORTH A DETOUR?</div>'
+      +'<div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700;color:var(--t1);margin-bottom:3px">Mahalakshmi Temple, Kolhapur</div>'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:9px;color:var(--t3);font-family:JetBrains Mono,monospace">6 km left · ~30 min</span><span style="font-size:9px;color:#1aed8a">● Low crowd</span></div>'
+      +'<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:9px">'+dtagHtml+'</div>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button onclick="speakTempleYes()" style="flex:2;padding:8px;border-radius:6px;background:'+color+';border:none;color:#000;font-family:Syne,sans-serif;font-weight:700;font-size:11px;cursor:pointer">Vote · Visit →</button>'
+      +'<button style="padding:8px 12px;border-radius:6px;background:transparent;border:1px solid var(--b2);color:var(--t3);font-family:Syne,sans-serif;font-size:11px;cursor:pointer">Skip</button>'
+      +'</div>';
+  } else if(type==='reroute') {
+    w.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+      +'<span style="font-size:20px">✅</span>'
+      +'<div><div style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:#1aed8a">Detour Confirmed</div>'
+      +'<div style="font-size:10px;color:var(--t2)">Rerouting to Mahalakshmi Temple</div></div></div>'
+      +'<div style="background:rgba(26,237,138,0.06);border:1px solid rgba(26,237,138,0.2);border-radius:6px;padding:7px 10px;font-size:9px;color:var(--t2);font-family:JetBrains Mono,monospace">New ETA: 12:47 PM · Navigation updated · Passport stamp incoming</div>';
+  } else if(type==='fatigue-l1') {
+    var s52 = 52;
+    var circ = 2*Math.PI*19;
+    var off = circ*(1-s52/100);
+    w.innerHTML = '<div style="display:flex;align-items:center;gap:12px">'
+      +'<svg viewBox="0 0 46 46" style="width:46px;height:46px;flex-shrink:0"><circle cx="23" cy="23" r="19" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="4"/><circle cx="23" cy="23" r="19" fill="none" stroke="'+color+'" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'" transform="rotate(-90 23 23)"/><text x="23" y="28" text-anchor="middle" fill="'+color+'" font-size="12" font-family="Syne" font-weight="700">'+s52+'</text></svg>'
+      +'<div><div style="font-family:JetBrains Mono,monospace;font-size:8px;color:var(--t4);margin-bottom:2px">Attention Score</div>'
+      +'<div style="font-family:Syne,sans-serif;font-size:12px;font-weight:600;color:'+color+'">Level 1 · Gentle Nudge</div>'
+      +'<div style="font-size:9px;color:var(--t2);margin-top:2px">Elevated blink rate + head lean</div></div></div>';
+  } else if(type==='fatigue-break') {
+    var s44 = 44;
+    var circ2 = 2*Math.PI*19;
+    var off2 = circ2*(1-s44/100);
+    w.innerHTML = '<div style="display:flex;align-items:center;gap:12px;margin-bottom:9px">'
+      +'<svg viewBox="0 0 46 46" style="width:46px;height:46px;flex-shrink:0"><circle cx="23" cy="23" r="19" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="4"/><circle cx="23" cy="23" r="19" fill="none" stroke="'+color+'" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+circ2+'" stroke-dashoffset="'+off2+'" transform="rotate(-90 23 23)"/><text x="23" y="28" text-anchor="middle" fill="'+color+'" font-size="12" font-family="Syne" font-weight="700">'+s44+'</text></svg>'
+      +'<div><div style="font-family:Syne,sans-serif;font-size:11px;font-weight:600;color:'+color+'">☕ REST STOP · 8 KM</div>'
+      +'<div style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:var(--t1)">24-hr Dhaba</div>'
+      +'<div style="font-size:9px;color:var(--t3)">Tea, snacks · 5-min break</div></div></div>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button style="flex:2;padding:8px;border-radius:6px;background:'+color+';border:none;color:#000;font-family:Syne,sans-serif;font-weight:700;font-size:11px;cursor:pointer">Navigate</button>'
+      +'<button style="padding:8px 14px;border-radius:6px;background:transparent;border:1px solid var(--b2);color:var(--t3);font-family:Syne,sans-serif;font-size:11px;cursor:pointer">Skip</button>'
+      +'</div>';
+  } else if(type==='checkin') {
+    w.innerHTML = '<div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700;color:'+color+';margin-bottom:5px">Still okay?</div>'
+      +'<div style="font-size:10px;color:var(--t2);margin-bottom:10px">Unexpected stop · 2-minute window</div>'
+      +'<div style="height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;margin-bottom:8px"><div style="height:100%;background:'+color+';border-radius:2px;animation:countDown 120s linear forwards;box-shadow:0 0 6px '+color+'"></div></div>'
+      +'<button style="width:100%;padding:9px;border-radius:7px;background:'+color+'18;border:1px solid '+color+'40;color:'+color+';font-family:Syne,sans-serif;font-weight:600;font-size:12px;cursor:pointer">✓ Press to confirm — all okay</button>';
+  }
+  return w;
+}
+
+// ═══════════════════════════════════════════════
+// REAR + PHONE
+// ═══════════════════════════════════════════════
+function renderRear(r) {
+  var el = document.getElementById('rear');
+  if(r === 'idle' || !r || r.type === 'idle') {
+    el.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"><div style="font-size:9px;color:var(--t4);font-family:JetBrains Mono,monospace;letter-spacing:1px;text-transform:uppercase">Rear screen inactive</div></div>';
+    return;
+  }
+  if(r.type==='passport' || r.type==='passport-stamp') {
+    var stamps = [
+      {e:'🛕',n:'Mahalakshmi Temple',ok:r.stamps>=1,isnew:r.type==='passport-stamp'&&r.stamps===3},
+      {e:'🏔',n:'Tamhini Ghat',ok:r.stamps>=2},
+      {e:'🏰',n:'Next stop…',ok:r.stamps>=3&&r.type==='passport-stamp'},
+      {e:'❓',n:'Mystery',ok:false},{e:'❓',n:'Mystery',ok:false},{e:'❓',n:'Mystery',ok:false}
+    ];
+    var shtml = '';
+    for(var si2=0;si2<stamps.length;si2++) {
+      var s3 = stamps[si2];
+      shtml += '<div style="width:44px;height:44px;border-radius:10px;background:'+(s3.ok?'rgba(255,213,102,0.14)':'rgba(255,255,255,0.03)')+';border:1px solid '+(s3.ok?'rgba(255,213,102,0.4)':'rgba(255,255,255,0.07)')+';display:flex;align-items:center;justify-content:center;font-size:18px;opacity:'+(s3.ok?'1':'0.3')+';position:relative'+(s3.isnew?';animation:breathe 1s ease-in-out 3':'')+'">'
+        +s3.e+(s3.isnew?'<div style="position:absolute;top:-5px;right:-5px;background:#1aed8a;border-radius:3px;font-size:7px;color:#000;padding:1px 4px;font-family:Syne,sans-serif;font-weight:700">NEW</div>':'')
+        +'</div>';
+    }
+    var pct2 = Math.round(r.stamps/r.total*100);
+    el.innerHTML = '<div style="padding:12px;height:100%;display:flex;flex-direction:column;background:linear-gradient(160deg,#08091a,#0c0e20)">'
+      +'<div style="font-family:JetBrains Mono,monospace;font-size:7px;color:var(--t4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px">Trip Passport</div>'
+      +'<div style="font-family:Syne,sans-serif;font-size:12px;font-weight:700;color:var(--t1);margin-bottom:9px">Pune → Goa via NH48</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">'+shtml+'</div>'
+      +'<div style="height:3px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:'+pct2+'%;background:#ffd166;border-radius:2px;transition:width .5s ease;box-shadow:0 0 5px rgba(255,213,102,0.4)"></div></div>'
+      +'<div style="font-size:9px;color:var(--t4);font-family:JetBrains Mono,monospace">'+r.stamps+' of '+r.total+' stamps earned</div>'
+      +'</div>';
+  } else if(r.type==='vote') {
+    el.innerHTML = '<div style="padding:11px;height:100%;display:flex;flex-direction:column;background:rgba(8,10,22,0.99)">'
+      +'<div style="font-family:JetBrains Mono,monospace;font-size:7px;color:var(--t4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px">Group vote · live</div>'
+      +'<div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700;color:var(--t1);margin-bottom:3px">Mahalakshmi Temple</div>'
+      +'<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px"><span style="font-size:7px;padding:2px 6px;border-radius:3px;background:rgba(255,255,255,0.04);border:1px solid var(--b1);color:var(--t4)">Heritage</span><span style="font-size:7px;padding:2px 6px;border-radius:3px;background:rgba(255,255,255,0.04);border:1px solid var(--b1);color:var(--t4)">6 km · ~30 min</span></div>'
+      +'<div style="display:flex;gap:5px;align-items:center;margin-bottom:8px">'
+      +'<div style="width:22px;height:22px;border-radius:50%;background:rgba(26,237,138,0.2);border:1.5px solid #1aed8a;display:flex;align-items:center;justify-content:center;font-size:8px;color:rgba(255,255,255,0.8);font-family:Syne,sans-serif;font-weight:700">S</div>'
+      +'<div style="width:22px;height:22px;border-radius:50%;background:rgba(26,237,138,0.2);border:1.5px solid #1aed8a;display:flex;align-items:center;justify-content:center;font-size:8px;color:rgba(255,255,255,0.8);font-family:Syne,sans-serif;font-weight:700">K</div>'
+      +'<div style="width:22px;height:22px;border-radius:50%;background:rgba(26,237,138,0.2);border:1.5px solid #1aed8a;display:flex;align-items:center;justify-content:center;font-size:8px;color:rgba(255,255,255,0.8);font-family:Syne,sans-serif;font-weight:700">M</div>'
+      +'<div style="width:22px;height:22px;border-radius:50%;background:rgba(26,237,138,0.2);border:1.5px solid #1aed8a;display:flex;align-items:center;justify-content:center;font-size:8px;color:rgba(255,255,255,0.8);font-family:Syne,sans-serif;font-weight:700">A</div>'
+      +'<span style="font-size:9px;color:var(--green);margin-left:4px;font-family:Syne,sans-serif;font-weight:600">4 Yes · 0 No</span>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;flex:1;align-items:end">'
+      +'<button onclick="speakTempleYes()" style="padding:13px 0;border-radius:8px;font-size:20px;background:rgba(26,237,138,0.18);border:1.5px solid #1aed8a;cursor:pointer">👍</button>'
+      +'<button style="padding:13px 0;border-radius:8px;font-size:20px;background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.1);cursor:pointer">👎</button>'
+      +'</div></div>';
+  } else if(r === 'privacy' || r.type === 'privacy') {
+    el.innerHTML = '<div style="width:100%;height:100%;display:grid;grid-template-columns:1fr 1fr">'
+      +'<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-right:1px solid var(--b1);padding:12px;background:rgba(4,6,14,0.95)">'
+      +'<div style="font-size:8px;color:var(--t4);font-family:JetBrains Mono,monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Inside</div>'
+      +'<div style="width:90%;height:48px;border-radius:6px;background:linear-gradient(135deg,rgba(80,100,200,0.07),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center"><div style="font-size:9px;color:var(--t4)">soft blurs</div></div>'
+      +'<div style="font-size:8px;color:rgba(165,127,255,0.65);text-align:center;line-height:1.5">Passenger sees indistinct forms</div>'
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px;background:rgba(200,210,230,0.05)">'
+      +'<div style="font-size:8px;color:var(--t4);font-family:JetBrains Mono,monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Outside</div>'
+      +'<div style="width:90%;height:48px;border-radius:6px;background:rgba(200,210,230,0.12);border:1px solid rgba(200,210,230,0.1);display:flex;align-items:center;justify-content:center"><div style="font-size:9px;color:rgba(200,210,230,0.45)">opaque silver</div></div>'
+      +'<div style="font-size:8px;color:rgba(165,127,255,0.65);text-align:center;line-height:1.5">Passerby sees only glass</div>'
+      +'</div></div>';
+  }
+}
+
+function renderPhone(p) {
+  var el = document.getElementById('phoneInner');
+  if(p === 'idle' || !p || p.type === 'idle') {
+    el.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px"><div style="font-size:8px;color:var(--t4);text-align:center;font-family:JetBrains Mono,monospace;letter-spacing:0.5px">Companion app · standby</div></div>';
+    return;
+  }
+  var isAlert = p.type==='alert';
+  var isArrived = p.type==='arrived';
+  var ac = isArrived?'#1aed8a':isAlert?'#f5a82a':'#4f92ff';
+  var ic = isArrived?'🏠':isAlert?'⚠':'👁';
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:5px;margin-bottom:10px">'
+    +'<div style="width:22px;height:22px;border-radius:50%;background:'+ac+'20;border:1px solid '+ac+'40;display:flex;align-items:center;justify-content:center;font-size:11px">'+ic+'</div>'
+    +'<div><div style="font-family:Syne,sans-serif;font-size:9px;font-weight:700;color:var(--t1)">ADAS Companion</div>'
+    +'<div style="font-size:8px;color:var(--t4);font-family:JetBrains Mono,monospace">'+p.time+'</div></div></div>'
+    +'<div style="background:'+ac+'0a;border:1px solid '+ac+'28;border-radius:8px;padding:8px 9px;margin-bottom:8px">'
+    +'<div style="font-family:Syne,sans-serif;font-size:9px;font-weight:600;color:'+ac+';margin-bottom:3px">'+p.name+'</div>'
+    +'<div style="font-size:9px;color:var(--t1);line-height:1.5;font-family:Outfit,sans-serif">'+p.msg+'</div></div>'
+    +(p.type==='tracking'?'<button style="width:100%;padding:6px;border-radius:5px;background:rgba(79,146,255,0.1);border:1px solid rgba(79,146,255,0.25);color:var(--blue);font-family:Syne,sans-serif;font-size:9px;font-weight:600;cursor:pointer;margin-bottom:4px">View Live Location</button><button style="width:100%;padding:6px;border-radius:5px;background:rgba(255,255,255,0.03);border:1px solid var(--b1);color:var(--t3);font-family:Syne,sans-serif;font-size:9px;cursor:pointer">Send gentle ping</button>':'')
+    +(isArrived?'<div style="text-align:center;padding:7px;font-size:8px;color:var(--t4);line-height:1.5">Location sharing ended.<br>No data retained.</div>':'');
+}
+
+// ═══════════════════════════════════════════════
+// INFO PANEL
+// ═══════════════════════════════════════════════
+function renderInfo() {
+  var step2 = st();
+  var scen2 = sc();
+  document.getElementById('infoTag').textContent = scen2.emoji+' '+scen2.label+' · '+step2.feat;
+  document.getElementById('infoTitle').textContent = step2.title;
+  var vtColors = {info:'#4f92ff',ask:'#f5a82a',confirm:'#1aed8a',warn:'#ff4f4f',nudge:'#a57fff',silent:'rgba(255,255,255,0.2)'};
+  var vc = vtColors[step2.vt] || '#4f92ff';
+  var featsHtml = '';
+  if(step2.feats && step2.feats.length) {
+    for(var fi=0;fi<step2.feats.length;fi++) featsHtml += '<span class="feat-chip" style="background:'+scen2.color+'18;border:1px solid '+scen2.color+'33;color:'+scen2.color+'">'+step2.feats[fi]+'</span>';
+  }
+  var voiceHtml = step2.voice
+    ? '<div class="voice-box" style="background:'+vc+'08;border:1px solid '+vc+'28">'
+      +'<div class="voice-box-lbl" style="color:'+vc+'">'+mkWF(vc,5)+' System voice · '+step2.vt.toUpperCase()+'</div>'
+      +'<div class="voice-box-text">"'+step2.voice+'"</div>'
+      +'<button class="play-btn" onclick="playCurrentVoice()" style="background:'+vc+'18;border:1px solid '+vc+'30;color:'+vc+'">&#9654; Play again</button>'
+      +'</div>'
+    : '<div class="silent-box"><div class="silent-txt">🔇 Silent action — no voice output</div></div>';
+  document.getElementById('infoBody').innerHTML = '<div class="info-sec"><div class="info-sec-lbl">What\'s happening</div><div class="info-desc">'+step2.desc+'</div></div>'
+    +'<div style="margin-bottom:10px">'+voiceHtml+'</div>'
+    +'<div class="info-sec"><div class="info-sec-lbl">System trigger</div><div class="trigger-box"><div class="trigger-text">'+step2.trigger+'</div></div></div>'
+    +'<div class="info-sec" style="margin-top:8px"><div class="info-sec-lbl">Design rationale</div><div class="design-note"><div class="dn-text">'+step2.note+'</div></div></div>'
+    +(featsHtml?'<div class="info-sec" style="margin-top:8px"><div class="info-sec-lbl">Active features</div><div class="feat-chips">'+featsHtml+'</div></div>':'');
+}
+
+// ═══════════════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════════════
+function renderSidebar() {
+  var scen3 = sc();
+  document.getElementById('sbName').textContent = scen3.label;
+  document.getElementById('sbSub').textContent = scen3.subtitle;
+  document.getElementById('sbPersona').textContent = scen3.persona;
+  var list = document.getElementById('stepList');
+  list.innerHTML = '';
+  for(var i=0;i<scen3.steps.length;i++) {
+    var s4 = scen3.steps[i];
+    var active = i===S.pi;
+    var done = i<S.pi;
+    var el = document.createElement('div');
+    el.className = 'si'+(active?' active':'')+(done?' done':'');
+    el.style.borderColor = active ? scen3.color+'40' : 'transparent';
+    el.style.background = active ? scen3.color+'0d' : '';
+    el.innerHTML = '<div class="si-num">Step '+(i+1)+'</div>'
+      +'<div class="si-title">'+s4.title+'</div>'
+      +'<span class="si-feat" style="background:'+scen3.color+'16;border:1px solid '+scen3.color+'30;color:'+scen3.color+'">'+s4.feat+' · '+s4.featLabel+'</span>'
+      +(done?'<div class="si-check" style="color:'+scen3.color+'88">✓</div>':'');
+    (function(idx){ el.onclick = function(){ S.pi=idx; render(); }; })(i);
+    list.appendChild(el);
+  }
+  var pct = ((S.pi+1)/scen3.steps.length*100).toFixed(0);
+  document.getElementById('pbFill').style.width = pct+'%';
+  document.getElementById('pbFill').style.background = scen3.color;
+  document.getElementById('pbLabel').textContent = (S.pi+1)+' / '+scen3.steps.length;
+}
+
+// ═══════════════════════════════════════════════
+// PILLS + DOTS
+// ═══════════════════════════════════════════════
+function renderPills() {
+  var el = document.getElementById('scenPills');
+  el.innerHTML = '';
+  for(var i=0;i<SCENARIOS.length;i++) {
+    var sc2 = SCENARIOS[i];
+    var active = i===S.si;
+    var btn = document.createElement('button');
+    btn.className = 'sp'+(active?' active':'');
+    btn.textContent = sc2.emoji+' '+sc2.label;
+    if(active) { btn.style.background=sc2.color; btn.style.borderColor=sc2.color; }
+    (function(idx){ btn.onclick = function(){ S.si=idx; S.pi=0; stopAuto(); render(); }; })(i);
+    el.appendChild(btn);
+  }
+}
+function renderDots() {
+  var scen4 = sc();
+  var el = document.getElementById('stepDots');
+  el.innerHTML = '';
+  for(var i=0;i<scen4.steps.length;i++) {
+    var d = document.createElement('div');
+    d.className = 'sbd';
+    d.style.width = i===S.pi?'20px':'7px';
+    d.style.background = i===S.pi?scen4.color:i<S.pi?scen4.color+'55':'rgba(255,255,255,0.1)';
+    (function(idx){ d.onclick=function(){ S.pi=idx; render(); }; })(i);
+    el.appendChild(d);
+  }
+  document.getElementById('sbLbl').textContent = 'Step '+(S.pi+1)+' of '+scen4.steps.length;
+}
+
+// ═══════════════════════════════════════════════
+// NAV BUTTONS
+// ═══════════════════════════════════════════════
+function bindNav() {
+  var scen5 = sc();
+  var last = S.pi >= scen5.steps.length-1;
+  function doNav(dir) {
+    if(dir<0 && S.pi>0) S.pi--;
+    else if(dir>0 && !last) S.pi++;
+    else if(dir>0 && last) S.pi=0;
+    render();
+  }
+  ['prevBtn','prevBtn2'].forEach(function(id) {
+    var b = document.getElementById(id);
+    if(!b) return;
+    b.disabled = S.pi===0;
+    b.onclick = function(){ doNav(-1); };
+  });
+  ['nextBtn','nextBtn2'].forEach(function(id) {
+    var b = document.getElementById(id);
+    if(!b) return;
+    b.textContent = last?'↺ Restart':'Next →';
+    b.style.background = last?'rgba(255,255,255,0.07)':scen5.color;
+    b.style.color = last?'var(--t2)':'#000';
+    b.onclick = function(){ doNav(1); };
+  });
+}
+
+// ═══════════════════════════════════════════════
+// AUTO-PLAY
+// ═══════════════════════════════════════════════
+function stopAuto() {
+  S.auto=false;
+  if(S.autoTimer){clearTimeout(S.autoTimer);S.autoTimer=null;}
+  var ab=document.getElementById('autoBtn');
+  if(ab){ab.className='auto-btn';ab.textContent='▶\u00a0 Auto-play scenario';}
+}
+function startAuto() {
+  S.auto=true;
+  var ab=document.getElementById('autoBtn');
+  if(ab){ab.className='auto-btn on';ab.textContent='⏸\u00a0 Playing…';}
+  function tick() {
+    if(!S.auto) return;
+    var scen6=sc();
+    if(S.pi<scen6.steps.length-1) {
+      S.pi++;
+      render();
+      var delay = scen6.steps[S.pi].voice ? Math.max(4500,scen6.steps[S.pi].voice.length*80+2000) : 3500;
+      S.autoTimer=setTimeout(tick,delay);
+    } else { stopAuto(); }
+  }
+  var d = st().voice ? Math.max(4000,st().voice.length*80+1500) : 3000;
+  S.autoTimer=setTimeout(tick,d);
+}
+document.getElementById('autoBtn').onclick = function(){ S.auto?stopAuto():startAuto(); };
+
+// ═══════════════════════════════════════════════
+// MAIN RENDER
+// ═══════════════════════════════════════════════
+function render() {
+  var step3=st();
+  var night=(step3.hud.sky==='night'||step3.hud.sky==='dusk');
+  renderPills();
+  renderSidebar();
+  renderDots();
+  bindNav();
+  renderHUD(step3.hud);
+  renderCentral(step3.central, night);
+  renderRear(step3.rear);
+  renderPhone(step3.phone);
+  renderInfo();
+  document.getElementById('clockEl').textContent=step3.time;
+  document.getElementById('spdEl').textContent=step3.speed;
+  if(step3.voice) {
+    var vtColors={info:'#4f92ff',ask:'#f5a82a',confirm:'#1aed8a',warn:'#ff4f4f',nudge:'#a57fff'};
+    setTimeout(function(){ speak(step3.voice, vtColors[step3.vt]||'#4f92ff'); }, 350);
+  }
+}
+
+// Named speak helpers — avoids quote-nesting issues in onclick attrs
+function speakOnboarding() { speak("Let's get to know you — 2 minutes. Start now or later?", '#4db8ff'); }
+function speakMsgSent() { speak('Message sent. Running 11 minutes late, see you soon.', '#4f92ff'); }
+function speakTempleYes() { speak('Family voted yes! Navigating to Mahalakshmi Temple.', '#1aed8a'); }
+function playCurrentVoice() {
+  var vtColors = {info:'#4f92ff',ask:'#f5a82a',confirm:'#1aed8a',warn:'#ff4f4f',nudge:'#a57fff'};
+  var s = SCENARIOS[S.si].steps[S.pi];
+  if(s.voice) speak(s.voice, vtColors[s.vt] || '#4f92ff');
+}
+
+
+// BOOT
+render();
+</script>
+</body>
+</html>
